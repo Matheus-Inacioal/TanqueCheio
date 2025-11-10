@@ -1,3 +1,7 @@
+
+'use client';
+
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,8 +12,25 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CostChart from "@/components/dashboard/cost-chart";
 import ConsumptionChart from "@/components/dashboard/consumption-chart";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { format, subMonths, addMonths } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export default function ReportsPage() {
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const handlePreviousMonth = () => {
+    setCurrentDate(subMonths(currentDate, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(addMonths(currentDate, 1));
+  };
+
+  const formattedMonth = format(currentDate, "MMMM yyyy", { locale: ptBR });
+  const capitalizedMonth = formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -28,8 +49,20 @@ export default function ReportsPage() {
         <TabsContent value="monthly" className="space-y-4">
             <Card>
                 <CardHeader>
-                    <CardTitle>Resumo de Novembro 2024</CardTitle>
-                    <CardDescription>Um resumo do seu desempenho e gastos este mês.</CardDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Resumo de {capitalizedMonth}</CardTitle>
+                        <CardDescription>Um resumo do seu desempenho e gastos este mês.</CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
+                              <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="icon" onClick={handleNextMonth}>
+                              <ChevronRight className="h-4 w-4" />
+                          </Button>
+                      </div>
+                    </div>
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2">
                     <CostChart />
