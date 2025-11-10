@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 export const metadata: Metadata = {
   title: "TanqueCheio",
   description: "Controle de abastecimentos, consumo de combustível e custos do veículo.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

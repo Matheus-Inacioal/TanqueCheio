@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserNav } from "@/components/layout/user-nav";
-import { Logo } from "@/components/icons";
+import { FuelPumpIcon } from "@/components/icons";
 import { AddFillUpDialog } from "@/components/fuel/add-fill-up-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { vehicles } from "@/lib/dummy-data";
@@ -50,13 +50,13 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
 
   React.useEffect(() => {
-    if (!isMobile) {
-      setOpen(true);
-    } else {
+    if (isMobile) {
       setOpen(false);
+    } else {
+      setOpen(true);
     }
   }, [isMobile, setOpen]);
-
+  
   // This is a workaround to force re-render on path change
   // until a better solution is found for active links in the sidebar
   const [key, setKey] = React.useState(0);
@@ -84,7 +84,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       >
         <SidebarHeader className="p-4">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <Logo className="size-8 text-primary" />
+            <FuelPumpIcon className="size-8 text-primary" />
             <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
               TanqueCheio
             </span>
@@ -122,7 +122,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
-          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger className="md:hidden" onClick={toggleSidebar} />
           <div className="flex w-full items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
                <Select defaultValue="main-vehicle">
