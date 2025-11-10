@@ -26,6 +26,8 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarInset,
+  useSidebar,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,10 +43,11 @@ import { AddFillUpDialog } from "@/components/fuel/add-fill-up-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { vehicles } from "@/lib/dummy-data";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+
+function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { open, setOpen, toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
-  const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!isMobile) {
@@ -52,7 +55,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     } else {
       setOpen(false);
     }
-  }, [isMobile]);
+  }, [isMobile, setOpen]);
 
   // This is a workaround to force re-render on path change
   // until a better solution is found for active links in the sidebar
@@ -73,7 +76,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <SidebarProvider open={open} onOpenChange={setOpen}>
+      <>
       <Sidebar
         variant="sidebar"
         collapsible="icon"
@@ -119,15 +122,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setOpen(!open)}
-          >
-            <PanelLeft className="size-5" />
-            <span className="sr-only">Toggle Sidebar</span>
-          </Button>
+          <SidebarTrigger className="md:hidden" />
           <div className="flex w-full items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
                <Select defaultValue="main-vehicle">
@@ -161,6 +156,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </AddFillUpDialog>
           </div>
       </SidebarInset>
-    </SidebarProvider>
+      </>
   );
+}
+
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </SidebarProvider>
+  )
 }
