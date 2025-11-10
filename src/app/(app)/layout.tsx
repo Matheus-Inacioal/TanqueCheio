@@ -63,13 +63,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         setOpen(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, isMobile]);
+  }, [pathname]);
 
   const navItems = [
     { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
     { href: "/vehicles", icon: <Car />, label: "Veículos" },
     { href: "/reports", icon: <BarChart3 />, label: "Relatórios" },
-    { href: "/settings", icon: <Settings />, label: "Configurações" },
+    { href: "/profile", icon: <Settings />, label: "Perfil" },
   ];
 
   return (
@@ -88,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </Link>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
+          <SidebarMenu key={key}>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
