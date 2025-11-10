@@ -44,14 +44,26 @@ import { vehicles } from "@/lib/dummy-data";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const [open, setOpen] = React.useState(isMobile ? false : true);
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isMobile) {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }, [isMobile]);
 
   // This is a workaround to force re-render on path change
   // until a better solution is found for active links in the sidebar
   const [key, setKey] = React.useState(0);
   React.useEffect(() => {
     setKey(prev => prev + 1);
-  }, [pathname]);
+    if(isMobile && open){
+        setOpen(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, isMobile]);
 
   const navItems = [
     { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
