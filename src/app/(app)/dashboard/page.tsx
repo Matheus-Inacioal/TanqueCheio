@@ -1,3 +1,4 @@
+
 import { Car, Droplets, Gauge, Wallet } from "lucide-react";
 import {
   Card,
@@ -11,6 +12,7 @@ import ConsumptionChart from "@/components/dashboard/consumption-chart";
 import { recentActivities } from "@/lib/dummy-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function DashboardPage() {
   const summaryData = [
@@ -43,6 +45,8 @@ export default function DashboardPage() {
       changeType: "increase",
     },
   ];
+  
+  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,7 +81,7 @@ export default function DashboardPage() {
               >
                 <div className="flex items-center gap-4">
                   <Avatar className="hidden h-9 w-9 sm:flex">
-                    <AvatarImage src={`/avatars/${activity.id}.png`} alt="Avatar" />
+                    <AvatarImage src={userAvatar?.imageUrl} alt="Avatar" data-ai-hint={userAvatar?.imageHint} />
                     <AvatarFallback>{activity.vehicle.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="grid gap-1">

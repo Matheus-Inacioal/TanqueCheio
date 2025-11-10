@@ -38,10 +38,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserNav } from "@/components/layout/user-nav";
-import { FuelPumpIcon } from "@/components/icons";
 import { AddFillUpDialog } from "@/components/fuel/add-fill-up-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { vehicles } from "@/lib/dummy-data";
+import { FuelPumpIcon } from "@/components/icons";
 
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
@@ -122,7 +122,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
-          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger className="md:hidden" onClick={toggleSidebar} />
           <div className="flex w-full items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
                <Select defaultValue="main-vehicle">
