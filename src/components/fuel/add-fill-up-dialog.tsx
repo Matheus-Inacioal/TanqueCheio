@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,10 +22,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { vehicles } from "@/lib/dummy-data";
+import { useToast } from "@/hooks/use-toast";
 
 export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = React.useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = () => {
+    // Aqui viria a lógica para salvar os dados no backend
+    toast({
+      title: "Sucesso!",
+      description: "Abastecimento salvo com sucesso.",
+    });
+    setOpen(false); // Fecha o diálogo
+  };
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -74,7 +89,7 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit">Salvar Abastecimento</Button>
+          <Button type="button" onClick={handleSubmit}>Salvar Abastecimento</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

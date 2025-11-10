@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,10 +20,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 export function AddVehicleDialog({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = React.useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = () => {
+    // Aqui viria a lógica para salvar os dados no backend
+    toast({
+      title: "Sucesso!",
+      description: "Veículo adicionado com sucesso.",
+    });
+    setOpen(false); // Fecha o diálogo
+  };
+
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -69,7 +84,7 @@ export function AddVehicleDialog({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit">Salvar Veículo</Button>
+          <Button type="button" onClick={handleSubmit}>Salvar Veículo</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
