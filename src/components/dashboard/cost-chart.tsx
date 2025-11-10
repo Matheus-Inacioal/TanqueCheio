@@ -1,6 +1,6 @@
 "use client"
 
-import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts"
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import {
   Card,
@@ -14,7 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { costData } from "@/lib/dummy-data"
+import { costData as defaultCostData } from "@/lib/dummy-data"
 
 const chartConfig = {
   cost: {
@@ -23,7 +23,11 @@ const chartConfig = {
   },
 }
 
-export default function CostChart() {
+type CostChartProps = {
+    data?: typeof defaultCostData;
+}
+
+export default function CostChart({ data = defaultCostData }: CostChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -34,7 +38,7 @@ export default function CostChart() {
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
           <LineChart
             accessibilityLayer
-            data={costData}
+            data={data}
             margin={{
               left: 12,
               right: 12,

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { generateRandomData } from "@/lib/dummy-data";
 
 export default function ReportsPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -30,6 +31,8 @@ export default function ReportsPage() {
 
   const formattedMonth = format(currentDate, "MMMM yyyy", { locale: ptBR });
   const capitalizedMonth = formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1);
+
+  const { newCostData, newConsumptionData } = useMemo(() => generateRandomData(currentDate), [currentDate]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -65,8 +68,8 @@ export default function ReportsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2">
-                    <CostChart />
-                    <ConsumptionChart />
+                    <CostChart data={newCostData} />
+                    <ConsumptionChart data={newConsumptionData} />
                 </CardContent>
             </Card>
         </TabsContent>
@@ -77,7 +80,7 @@ export default function ReportsPage() {
                     <CardDescription>Acompanhe a eficiência do seu veículo ao longo do tempo.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ConsumptionChart />
+                    <ConsumptionChart data={newConsumptionData}/>
                 </CardContent>
             </Card>
         </TabsContent>
@@ -88,7 +91,7 @@ export default function ReportsPage() {
                     <CardDescription>Veja para onde seu dinheiro está indo.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <CostChart />
+                    <CostChart data={newCostData}/>
                 </CardContent>
             </Card>
         </TabsContent>

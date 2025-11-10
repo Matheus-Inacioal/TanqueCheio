@@ -14,7 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { consumptionData } from "@/lib/dummy-data"
+import { consumptionData as defaultConsumptionData } from "@/lib/dummy-data"
 
 const chartConfig = {
   consumption: {
@@ -23,7 +23,11 @@ const chartConfig = {
   },
 }
 
-export default function ConsumptionChart() {
+type ConsumptionChartProps = {
+    data?: typeof defaultConsumptionData;
+}
+
+export default function ConsumptionChart({ data = defaultConsumptionData }: ConsumptionChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -32,7 +36,7 @@ export default function ConsumptionChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
-          <BarChart accessibilityLayer data={consumptionData}>
+          <BarChart accessibilityLayer data={data}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"

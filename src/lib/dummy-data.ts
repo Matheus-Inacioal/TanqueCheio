@@ -77,3 +77,26 @@ export const maintenanceAlerts: MaintenanceAlert[] = [
         lastServiceOdometer: 16000,
     }
 ]
+
+// Function to generate dynamic data based on the month
+const generateRandomData = (date: Date) => {
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const seed = month + year;
+  
+    const random = (multiplier: number) => Math.sin(seed * multiplier) * 10;
+  
+    const newCostData = costData.map((item, index) => ({
+      ...item,
+      cost: Math.max(0, Math.round(item.cost + random(index) * 20)),
+    }));
+  
+    const newConsumptionData = consumptionData.map((item, index) => ({
+      ...item,
+      consumption: Math.max(5, parseFloat((item.consumption + random(index)).toFixed(1))),
+    }));
+  
+    return { newCostData, newConsumptionData };
+  };
+  
+export { generateRandomData };
