@@ -70,7 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Link href="/dashboard" className="flex items-center gap-2">
             <Logo className="size-8 text-primary" />
             <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
-              FuelWise
+              TanqueCheio
             </span>
           </Link>
         </SidebarHeader>

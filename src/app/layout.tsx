@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "FuelWise",
+  title: "TanqueCheio",
   description: "Controle de abastecimentos, consumo de combustível e custos do veículo.",
 };
 
