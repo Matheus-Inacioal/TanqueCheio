@@ -16,7 +16,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -113,9 +112,9 @@ a.click();
         </p>
       </div>
 
-      {/* Dados Pessoais */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {/* Dados Pessoais */}
           <Card>
               <CardHeader>
                 <CardTitle>Dados Pessoais</CardTitle>
@@ -174,100 +173,104 @@ a.click();
                   )}
                 />
               </CardContent>
+          </Card>
+
+          {/* Preferências */}
+          <Card>
+            <CardHeader>
+                <CardTitle>Preferências do App</CardTitle>
+                <CardDescription>Personalize sua experiência de uso.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
+                        <h3 className="text-base font-medium">Tema Visual</h3>
+                        <p className="text-sm text-muted-foreground">Escolha entre os temas claro, escuro ou o padrão do sistema.</p>
+                    </div>
+                    <ThemeToggle />
+                </div>
+            </CardContent>
+          </Card>
+
+           {/* Privacidade e LGPD */}
+          <Card>
+              <CardHeader>
+                  <CardTitle>Privacidade e LGPD</CardTitle>
+                  <CardDescription>Gerencie seus dados e consentimentos.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                  <div className="space-y-2 text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">
+                      <p>Nós coletamos apenas os dados essenciais para o funcionamento do app, como seu nome, e-mail, e os registros de seus veículos e abastecimentos. A base legal para o tratamento desses dados é a <strong>execução do serviço</strong> que você contratou ao usar o app.</p>
+                      <p>Você tem total controle sobre suas informações.</p>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                      <p className="text-sm font-medium">Receber comunicações de marketing</p>
+                      <Switch />
+                  </div>
+                  <FormDescription className="px-1">
+                      Ao ativar, você consente em receber e-mails com novidades e promoções. Você pode revogar isso a qualquer momento.
+                  </FormDescription>
+
+                  <div className="grid sm:grid-cols-2 gap-4 pt-2">
+                      <Button variant="outline">Ler a Política de Privacidade</Button>
+                      <Button variant="outline">Ler os Termos de Uso</Button>
+                       <Button variant="outline" onClick={handleDownloadData}>Baixar meus dados (JSON)</Button>
+                      <Button variant="outline">Ver resumo dos meus dados</Button>
+                  </div>
+              </CardContent>
+          </Card>
+
+          {/* Segurança e Exclusão de Conta */}
+          <Card>
+              <CardHeader>
+                  <CardTitle>Segurança</CardTitle>
+                  <CardDescription>Gerencie a segurança da sua conta.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                   <Button variant="outline" onClick={() => toast({ title: "E-mail de redefinição enviado!", description: "Verifique sua caixa de entrada para alterar sua senha."})}>
+                      Alterar senha
+                  </Button>
+                   <FormDescription className="pt-2">
+                      Enviaremos um link seguro para o seu e-mail para que você possa criar uma nova senha.
+                  </FormDescription>
+              </CardContent>
               <CardFooter className="border-t px-6 py-4">
                 <Button type="submit">Salvar alterações</Button>
               </CardFooter>
           </Card>
+
+          <Card>
+              <CardHeader className="border-b">
+                <CardTitle>Excluir conta</CardTitle>
+                <CardDescription>
+                    Esta ação é irreversível. Todos os seus dados, incluindo veículos, abastecimentos e histórico, serão permanentemente apagados.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                   <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">Eu quero excluir minha conta</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta ação não pode ser desfeita. Isso excluirá permanentemente sua conta e removerá todos os seus dados de nossos servidores.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => toast({ variant: "destructive", title: "Conta excluída", description:"Sua conta e todos os seus dados foram removidos."})}>
+                          Sim, excluir minha conta
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+              </CardContent>
+          </Card>
         </form>
       </Form>
-
-      {/* Preferências */}
-      <Card>
-        <CardHeader>
-            <CardTitle>Preferências do App</CardTitle>
-            <CardDescription>Personalize sua experiência de uso.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                    <h3 className="text-base font-medium">Tema Visual</h3>
-                    <p className="text-sm text-muted-foreground">Escolha entre os temas claro, escuro ou o padrão do sistema.</p>
-                </div>
-                <ThemeToggle />
-            </div>
-        </CardContent>
-      </Card>
-
-       {/* Privacidade e LGPD */}
-      <Card>
-          <CardHeader>
-              <CardTitle>Privacidade e LGPD</CardTitle>
-              <CardDescription>Gerencie seus dados e consentimentos.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-              <div className="space-y-2 text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">
-                  <p>Nós coletamos apenas os dados essenciais para o funcionamento do app, como seu nome, e-mail, e os registros de seus veículos e abastecimentos. A base legal para o tratamento desses dados é a <strong>execução do serviço</strong> que você contratou ao usar o app.</p>
-                  <p>Você tem total controle sobre suas informações.</p>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                  <p className="text-sm font-medium">Receber comunicações de marketing</p>
-                  <Switch />
-              </div>
-              <FormDescription className="px-1">
-                  Ao ativar, você consente em receber e-mails com novidades e promoções. Você pode revogar isso a qualquer momento.
-              </FormDescription>
-
-              <div className="grid sm:grid-cols-2 gap-4 pt-2">
-                  <Button variant="outline">Ler a Política de Privacidade</Button>
-                  <Button variant="outline">Ler os Termos de Uso</Button>
-                   <Button variant="outline" onClick={handleDownloadData}>Baixar meus dados (JSON)</Button>
-                  <Button variant="outline">Ver resumo dos meus dados</Button>
-              </div>
-          </CardContent>
-      </Card>
-
-      {/* Segurança e Exclusão de Conta */}
-      <Card>
-          <CardHeader>
-              <CardTitle>Segurança</CardTitle>
-              <CardDescription>Gerencie a segurança da sua conta.</CardDescription>
-          </CardHeader>
-          <CardContent>
-               <Button variant="outline" onClick={() => toast({ title: "E-mail de redefinição enviado!", description: "Verifique sua caixa de entrada para alterar sua senha."})}>
-                  Alterar senha
-              </Button>
-               <FormDescription className="pt-2">
-                  Enviaremos um link seguro para o seu e-mail para que você possa criar uma nova senha.
-              </FormDescription>
-          </CardContent>
-          <CardFooter className="flex-col items-start gap-4 border-t px-6 py-4">
-              <h3 className="font-semibold">Excluir conta</h3>
-              <p className="text-sm text-muted-foreground">
-                  Esta ação é irreversível. Todos os seus dados, incluindo veículos, abastecimentos e histórico, serão permanentemente apagados.
-              </p>
-               <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">Eu quero excluir minha conta</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta ação não pode ser desfeita. Isso excluirá permanentemente sua conta e removerá todos os seus dados de nossos servidores.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => toast({ variant: "destructive", title: "Conta excluída", description:"Sua conta e todos os seus dados foram removidos."})}>
-                      Sim, excluir minha conta
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-          </CardFooter>
-      </Card>
-
     </div>
   );
 }
