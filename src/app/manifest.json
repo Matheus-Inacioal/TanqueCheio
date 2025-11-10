@@ -8,12 +8,12 @@
   "theme_color": "#1E90FF",
   "icons": [
     {
-      "src": "https://storage.googleapis.com/studiopicker-assets/tanque-cheio-192.png",
+      "src": "icontanquecheio.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://storage.googleapis.com/studiopicker-assets/tanque-cheio-512.png",
+      "src": "icontanquecheio.png",
       "sizes": "512x512",
       "type": "image/png"
     }
