@@ -199,72 +199,76 @@ export default function ProfilePage() {
 
        {/* Privacidade e LGPD */}
       <Card>
-        <CardHeader>
-            <CardTitle>Privacidade e LGPD</CardTitle>
-            <CardDescription>Gerencie seus dados e consentimentos.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="space-y-2 text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">
-                <p>Nós coletamos apenas os dados essenciais para o funcionamento do app, como seu nome, e-mail, e os registros de seus veículos e abastecimentos. A base legal para o tratamento desses dados é a <strong>execução do serviço</strong> que você contratou ao usar o app.</p>
-                <p>Você tem total controle sobre suas informações.</p>
-            </div>
+        <Form {...form}>
+            <CardHeader>
+                <CardTitle>Privacidade e LGPD</CardTitle>
+                <CardDescription>Gerencie seus dados e consentimentos.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2 text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">
+                    <p>Nós coletamos apenas os dados essenciais para o funcionamento do app, como seu nome, e-mail, e os registros de seus veículos e abastecimentos. A base legal para o tratamento desses dados é a <strong>execução do serviço</strong> que você contratou ao usar o app.</p>
+                    <p>Você tem total controle sobre suas informações.</p>
+                </div>
 
-            <div className="flex items-center justify-between rounded-lg border p-4">
-                <p className="text-sm font-medium">Receber comunicações de marketing</p>
-                <Switch />
-            </div>
-            <FormDescription className="px-1">
-                Ao ativar, você consente em receber e-mails com novidades e promoções. Você pode revogar isso a qualquer momento.
-            </FormDescription>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <p className="text-sm font-medium">Receber comunicações de marketing</p>
+                    <Switch />
+                </div>
+                <FormDescription className="px-1">
+                    Ao ativar, você consente em receber e-mails com novidades e promoções. Você pode revogar isso a qualquer momento.
+                </FormDescription>
 
-            <div className="grid sm:grid-cols-2 gap-4 pt-2">
-                <Button variant="outline">Ler a Política de Privacidade</Button>
-                <Button variant="outline">Ler os Termos de Uso</Button>
-                 <Button variant="outline" onClick={handleDownloadData}>Baixar meus dados (JSON)</Button>
-                <Button variant="outline">Ver resumo dos meus dados</Button>
-            </div>
-        </CardContent>
+                <div className="grid sm:grid-cols-2 gap-4 pt-2">
+                    <Button variant="outline">Ler a Política de Privacidade</Button>
+                    <Button variant="outline">Ler os Termos de Uso</Button>
+                     <Button variant="outline" onClick={handleDownloadData}>Baixar meus dados (JSON)</Button>
+                    <Button variant="outline">Ver resumo dos meus dados</Button>
+                </div>
+            </CardContent>
+        </Form>
       </Card>
 
       {/* Segurança e Exclusão de Conta */}
       <Card>
-        <CardHeader>
-            <CardTitle>Segurança</CardTitle>
-            <CardDescription>Gerencie a segurança da sua conta.</CardDescription>
-        </CardHeader>
-        <CardContent>
-             <Button variant="outline" onClick={() => toast({ title: "E-mail de redefinição enviado!", description: "Verifique sua caixa de entrada para alterar sua senha."})}>
-                Alterar senha
-            </Button>
-             <FormDescription className="pt-2">
-                Enviaremos um link seguro para o seu e-mail para que você possa criar uma nova senha.
-            </FormDescription>
-        </CardContent>
-        <CardFooter className="flex-col items-start gap-4 border-t px-6 py-4">
-            <h3 className="font-semibold">Excluir conta</h3>
-            <p className="text-sm text-muted-foreground">
-                Esta ação é irreversível. Todos os seus dados, incluindo veículos, abastecimentos e histórico, serão permanentemente apagados.
-            </p>
-             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">Eu quero excluir minha conta</Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta ação não pode ser desfeita. Isso excluirá permanentemente sua conta e removerá todos os seus dados de nossos servidores.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => toast({ variant: "destructive", title: "Conta excluída", description:"Sua conta e todos os seus dados foram removidos."})}>
-                    Sim, excluir minha conta
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-        </CardFooter>
+        <Form {...form}>
+            <CardHeader>
+                <CardTitle>Segurança</CardTitle>
+                <CardDescription>Gerencie a segurança da sua conta.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Button variant="outline" onClick={() => toast({ title: "E-mail de redefinição enviado!", description: "Verifique sua caixa de entrada para alterar sua senha."})}>
+                    Alterar senha
+                </Button>
+                 <FormDescription className="pt-2">
+                    Enviaremos um link seguro para o seu e-mail para que você possa criar uma nova senha.
+                </FormDescription>
+            </CardContent>
+            <CardFooter className="flex-col items-start gap-4 border-t px-6 py-4">
+                <h3 className="font-semibold">Excluir conta</h3>
+                <p className="text-sm text-muted-foreground">
+                    Esta ação é irreversível. Todos os seus dados, incluindo veículos, abastecimentos e histórico, serão permanentemente apagados.
+                </p>
+                 <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">Eu quero excluir minha conta</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente sua conta e removerá todos os seus dados de nossos servidores.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => toast({ variant: "destructive", title: "Conta excluída", description:"Sua conta e todos os seus dados foram removidos."})}>
+                        Sim, excluir minha conta
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+            </CardFooter>
+        </Form>
       </Card>
 
     </div>
