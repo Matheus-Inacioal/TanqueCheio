@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   title: "TanqueCheio",
   description: "Controle de abastecimentos, consumo de combustível e custos do veículo.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icontanquecheio.png",
+  },
 };
 
 export default function RootLayout({
@@ -34,7 +37,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <main>{children}</main>
           <Toaster />
         </ThemeProvider>
       </body>
