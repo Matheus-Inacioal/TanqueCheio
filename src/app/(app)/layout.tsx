@@ -12,6 +12,7 @@ import {
   PlusCircle,
   Settings,
   BarChart3,
+  HelpCircle,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -96,9 +97,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-4">
-          <Button variant="outline" className="w-full justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-auto">
-            <Settings className="mr-2 group-data-[collapsible=icon]:mr-0"/>
-            <span className="group-data-[collapsible=icon]:hidden">Ajuda & Suporte</span>
+          <Button variant="outline" className="w-full justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-auto" asChild>
+            <Link href="/help">
+              <HelpCircle className="mr-2 group-data-[collapsible=icon]:mr-0"/>
+              <span className="group-data-[collapsible=icon]:hidden">Ajuda & Suporte</span>
+            </Link>
           </Button>
         </SidebarFooter>
       </Sidebar>
