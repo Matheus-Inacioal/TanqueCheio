@@ -90,16 +90,13 @@ export default function ProfilePage() {
             displayName: data.name
         });
 
-        // Firebase Auth requires a verification process to update phone number,
-        // which is outside the scope of a simple profile update.
-        // We will just show a toast message.
         if (data.phone && data.phone !== user.phoneNumber) {
-             toast({
+            toast({
                 title: 'Nome atualizado!',
                 description: 'A atualização do telefone requer verificação e não é suportada nesta interface.',
             });
         } else {
-             toast({
+            toast({
                 title: 'Perfil atualizado!',
                 description: 'Suas informações foram salvas com sucesso.',
             });
@@ -353,5 +350,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
