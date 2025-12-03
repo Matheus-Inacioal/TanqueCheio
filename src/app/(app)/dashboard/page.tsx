@@ -68,6 +68,8 @@ export default function DashboardPage() {
         return emptyState;
     }
 
+    const lastFillUp = fuelLogs[0];
+
     // Recent Activities
     const recentActivities = fuelLogs.slice(0, 4).map((log: WithId<FillUp>) => ({
       id: log.id,
@@ -95,8 +97,6 @@ export default function DashboardPage() {
       const lastOdometerThisMonth = Math.max(...monthlyLogs.map(l => l.odometer));
       monthlyDistance = lastOdometerThisMonth - firstOdometerThisMonth;
     }
-
-    const lastFillUp = fuelLogs[0];
 
     // Average consumption
     let avgConsumption = 0;
