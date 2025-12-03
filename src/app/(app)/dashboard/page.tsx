@@ -73,6 +73,11 @@ export default function DashboardPage() {
     const vehicleName = primaryVehicle?.name || 'Veículo';
     const lastFillUp = fuelLogs[0];
 
+    // If there's no last fill up, return the empty state to avoid errors
+    if (!lastFillUp) {
+      return emptyState;
+    }
+
     const recentActivities = fuelLogs.slice(0, 4).map((log) => ({
         id: log.id,
         vehicle: vehicleName,
