@@ -5,7 +5,7 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -31,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { FuelPumpIcon, GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
@@ -44,6 +45,7 @@ export default function LoginPage() {
   const auth = useAuth();
   const router = useRouter();
   const { user, isLoading } = useUser();
+  const firestore = useFirestore();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -58,6 +60,41 @@ export default function LoginPage() {
       router.replace('/dashboard');
     }
   }, [user, isLoading, router]);
+
+  React.useEffect(() => {
+    const handleRedirectResult = async () => {
+        try {
+            const result = await getRedirectResult(auth);
+            if (result?.user) {
+                const userRef = doc(firestore, 'users', result.user.uid);
+                const userSnap = await getDoc(userRef);
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, {
+                        id: result.user.uid,
+                        email: result.user.email,
+                        displayName: result.user.displayName,
+                        photoURL: result.user.photoURL,
+                    });
+                }
+                toast({
+                    title: 'Login bem-sucedido!',
+                    description: 'Bem-vindo de volta.',
+                });
+                router.replace('/dashboard');
+            }
+        } catch (error) {
+            console.error('Erro ao processar o resultado do redirecionamento do Google:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Falha no Login com Google',
+                description: 'Não foi possível fazer login com o Google. Verifique a configuração do projeto.',
+            });
+        }
+    };
+    if (auth && firestore) {
+      handleRedirectResult();
+    }
+  }, [auth, firestore, router, toast]);
 
   const handleLogin = async (values: LoginFormValues) => {
     try {
@@ -84,7 +121,6 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      // Usando signInWithRedirect em vez de signInWithPopup
       await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error('Erro ao iniciar login com Google:', error);

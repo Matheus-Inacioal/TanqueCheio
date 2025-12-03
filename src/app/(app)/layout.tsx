@@ -110,10 +110,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const { openMobile, setOpenMobile, setOpen } = useSidebar();
   const isMobile = useIsMobile();
   const { user, isLoading: isUserLoading } = useUser();
-  const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
-  const { toast } = useToast();
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
@@ -121,41 +118,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [isUserLoading, user, router]);
 
-  React.useEffect(() => {
-    const handleRedirectResult = async () => {
-        try {
-            const result = await getRedirectResult(auth);
-            if (result?.user) {
-                const userRef = doc(firestore, 'users', result.user.uid);
-                const userSnap = await getDoc(userRef);
-                if (!userSnap.exists()) {
-                    await setDoc(userRef, {
-                        id: result.user.uid,
-                        email: result.user.email,
-                        displayName: result.user.displayName,
-                        photoURL: result.user.photoURL,
-                    });
-                }
-                toast({
-                    title: 'Login bem-sucedido!',
-                    description: 'Bem-vindo de volta.',
-                });
-                router.replace('/dashboard');
-            }
-        } catch (error) {
-            console.error('Erro ao processar o resultado do redirecionamento do Google:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Falha no Login com Google',
-                description: 'Não foi possível fazer login com o Google. Tente novamente.',
-            });
-        }
-    };
-    if (auth && firestore) {
-      handleRedirectResult();
-    }
-  }, [auth, firestore, router, toast]);
-
+  const firestore = useFirestore();
   const vehiclesQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(firestore, `users/${user.uid}/vehicles`));
