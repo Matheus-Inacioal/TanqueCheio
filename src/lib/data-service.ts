@@ -41,50 +41,7 @@ type ProcessedData = {
 };
 
 /**
- * Gera dados de exemplo para o dashboard quando não há dados reais.
- */
-function getMockData(): ProcessedData {
-  const now = new Date();
-
-  // Gera 10 abastecimentos fictícios nos últimos 3 meses
-  const mockFuelLogs: WithId<FillUp>[] = Array.from({ length: 10 }).map((_, i) => {
-    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i * 8);
-    const odometer = 50000 - i * 350;
-    const liters = 35 + Math.random() * 10;
-    const pricePerLiter = 5.5 + Math.random() * 0.5;
-    const cost = liters * pricePerLiter;
-    return {
-      id: `mock-${i}`,
-      vehicleId: 'mock-vehicle-id',
-      userId: 'mock-user-id',
-      date: { toDate: () => date } as any, // Simula o Timestamp do Firestore
-      odometer,
-      liters,
-      cost,
-      pricePerLiter,
-      fuelType: 'Gasoline',
-      createdAt: { toDate: () => date } as any,
-    };
-  });
-  
-  // Cria um veículo fictício apenas para a função de processamento
-  const mockVehicle: WithId<Vehicle> = {
-    id: 'mock-vehicle-id',
-    name: 'Veículo de Exemplo',
-    userId: 'mock-user-id',
-    isPrimary: true,
-    initialOdometer: 45000,
-    odometer: 50000,
-    fuelType: 'Flex',
-    createdAt: { toDate: () => new Date() } as any,
-  };
-
-  return processData(mockFuelLogs, mockVehicle);
-}
-
-
-/**
- * Processa os logs de combustível (reais ou fictícios) para gerar os dados do dashboard.
+ * Processa os logs de combustível para gerar os dados do dashboard.
  * @param fuelLogs Array de logs de combustível.
  * @param primaryVehicle O veículo principal.
  */
@@ -179,24 +136,13 @@ function processData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle: WithId<V
 
 export function useDashboardData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle: WithId<Vehicle> | undefined, areFuelLogsLoading: boolean) {
   return useMemo(() => {
-    // Se estiver carregando, retorne um estado vazio para os componentes de UI lidarem.
-    if (areFuelLogsLoading) {
-      return processData(null, undefined);
-    }
-    // Se não houver logs de combustível, use os dados mockados.
-    if (!fuelLogs || fuelLogs.length === 0) {
-      return getMockData();
-    }
-    // Caso contrário, processe os dados reais.
     return processData(fuelLogs, primaryVehicle);
   }, [fuelLogs, primaryVehicle, areFuelLogsLoading]);
 }
 
 export function useReportsData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle: WithId<Vehicle> | undefined, areFuelLogsLoading: boolean, currentDate: Date) {
     return useMemo(() => {
-        const dataToProcess = (!fuelLogs || fuelLogs.length === 0) && !areFuelLogsLoading ? getMockData().recentActivities.map(a => ({...a, date: { toDate: () => new Date(a.date) }, liters: parseFloat(a.description.split(' ')[2]), cost: 100, odometer: 50000 - Math.random() * 1000 }) as unknown as WithId<FillUp>) : fuelLogs;
-
-        if (!dataToProcess || dataToProcess.length === 0) {
+        if (!fuelLogs || fuelLogs.length === 0) {
             return {
                 monthlyCostData: [],
                 monthlyConsumptionData: [],
@@ -209,7 +155,7 @@ export function useReportsData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle
         const start = startOfMonth(currentDate);
         const end = endOfMonth(currentDate);
         
-        const monthlyLogs = dataToProcess.filter(log => {
+        const monthlyLogs = fuelLogs.filter(log => {
             const logDate = log.date.toDate();
             return logDate >= start && logDate <= end;
         });
@@ -230,7 +176,7 @@ export function useReportsData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle
             };
         }).filter(Boolean) as ConsumptionChartData[];
 
-        const allTimeConsumptionData = dataToProcess.slice().sort((a,b) => a.odometer - b.odometer).slice(-10).map((log, index, arr) => {
+        const allTimeConsumptionData = fuelLogs.slice().sort((a,b) => a.odometer - b.odometer).slice(-10).map((log, index, arr) => {
             if (index === 0) return null;
             const prevLog = arr[index - 1];
             const distance = log.odometer - prevLog.odometer;
@@ -243,7 +189,7 @@ export function useReportsData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle
 
         const allTimeCostData = Array.from({ length: 6 }).map((_, i) => {
             const d = subMonths(new Date(), i);
-            const cost = dataToProcess.filter(log => {
+            const cost = fuelLogs.filter(log => {
                 const logDate = log.date.toDate();
                 return logDate.getMonth() === d.getMonth() && logDate.getFullYear() === d.getFullYear();
             }).reduce((sum, log) => sum + log.cost, 0);
