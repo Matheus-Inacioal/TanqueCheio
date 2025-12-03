@@ -42,9 +42,8 @@ type ProcessedData = {
 
 /**
  * Gera dados de exemplo para o dashboard quando não há dados reais.
- * @param primaryVehicle O veículo principal para associar os dados.
  */
-function getMockData(primaryVehicle: WithId<Vehicle> | undefined): ProcessedData {
+function getMockData(): ProcessedData {
   const now = new Date();
 
   // Gera 10 abastecimentos fictícios nos últimos 3 meses
@@ -56,7 +55,7 @@ function getMockData(primaryVehicle: WithId<Vehicle> | undefined): ProcessedData
     const cost = liters * pricePerLiter;
     return {
       id: `mock-${i}`,
-      vehicleId: primaryVehicle?.id || 'mock-vehicle-id',
+      vehicleId: 'mock-vehicle-id',
       userId: 'mock-user-id',
       date: { toDate: () => date } as any, // Simula o Timestamp do Firestore
       odometer,
@@ -67,8 +66,20 @@ function getMockData(primaryVehicle: WithId<Vehicle> | undefined): ProcessedData
       createdAt: { toDate: () => date } as any,
     };
   });
+  
+  // Cria um veículo fictício apenas para a função de processamento
+  const mockVehicle: WithId<Vehicle> = {
+    id: 'mock-vehicle-id',
+    name: 'Veículo de Exemplo',
+    userId: 'mock-user-id',
+    isPrimary: true,
+    initialOdometer: 45000,
+    odometer: 50000,
+    fuelType: 'Flex',
+    createdAt: { toDate: () => new Date() } as any,
+  };
 
-  return processData(mockFuelLogs as WithId<FillUp>[], primaryVehicle);
+  return processData(mockFuelLogs as WithId<FillUp>[], mockVehicle);
 }
 
 
@@ -174,7 +185,7 @@ export function useDashboardData(fuelLogs: WithId<FillUp>[] | null, primaryVehic
     }
     // Se não houver logs de combustível, use os dados mockados.
     if (!fuelLogs || fuelLogs.length === 0) {
-      return getMockData(primaryVehicle);
+      return getMockData();
     }
     // Caso contrário, processe os dados reais.
     return processData(fuelLogs, primaryVehicle);
@@ -183,7 +194,7 @@ export function useDashboardData(fuelLogs: WithId<FillUp>[] | null, primaryVehic
 
 export function useReportsData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle: WithId<Vehicle> | undefined, areFuelLogsLoading: boolean, currentDate: Date) {
     return useMemo(() => {
-        const dataToProcess = (!fuelLogs || fuelLogs.length === 0) && !areFuelLogsLoading ? getMockData(primaryVehicle).recentActivities.map(a => ({...a, date: { toDate: () => new Date(a.date) }, liters: parseFloat(a.description.split(' ')[2]), cost: 100, odometer: 50000 - Math.random() * 1000 }) as unknown as WithId<FillUp>) : fuelLogs;
+        const dataToProcess = (!fuelLogs || fuelLogs.length === 0) && !areFuelLogsLoading ? getMockData().recentActivities.map(a => ({...a, date: { toDate: () => new Date(a.date) }, liters: parseFloat(a.description.split(' ')[2]), cost: 100, odometer: 50000 - Math.random() * 1000 }) as unknown as WithId<FillUp>) : fuelLogs;
 
         if (!dataToProcess || dataToProcess.length === 0) {
             return {
