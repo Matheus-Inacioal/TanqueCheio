@@ -5,7 +5,7 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, updateProfile, getRedirectResult } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { FuelPumpIcon, GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const signupFormSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
@@ -63,6 +63,43 @@ export default function SignupPage() {
     }
   }, [user, isLoading, router]);
   
+  React.useEffect(() => {
+    const handleRedirectResult = async () => {
+        try {
+            const result = await getRedirectResult(auth);
+            if (result?.user) {
+                const userRef = doc(firestore, 'users', result.user.uid);
+                const userSnap = await getDoc(userRef);
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, {
+                        id: result.user.uid,
+                        email: result.user.email,
+                        displayName: result.user.displayName,
+                        photoURL: result.user.photoURL,
+                    });
+                }
+                toast({
+                    title: 'Login bem-sucedido!',
+                    description: 'Bem-vindo de volta.',
+                });
+                router.replace('/dashboard');
+            }
+        } catch (error: any) {
+            console.error('Erro ao processar o resultado do redirecionamento do Google:', error);
+            if (error.code !== 'auth/user-cancelled') {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Falha no Login com Google',
+                    description: 'Não foi possível fazer login com o Google. Verifique a configuração do projeto.',
+                });
+            }
+        }
+    };
+    if (auth && firestore) {
+      handleRedirectResult();
+    }
+  }, [auth, firestore, router, toast]);
+
   const createFirestoreUser = async (user: any, displayName?: string | null) => {
     const userRef = doc(firestore, 'users', user.uid);
     await setDoc(userRef, {

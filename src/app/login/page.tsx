@@ -82,13 +82,15 @@ export default function LoginPage() {
                 });
                 router.replace('/dashboard');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro ao processar o resultado do redirecionamento do Google:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Falha no Login com Google',
-                description: 'Não foi possível fazer login com o Google. Verifique a configuração do projeto.',
-            });
+            if (error.code !== 'auth/user-cancelled') {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Falha no Login com Google',
+                    description: 'Não foi possível fazer login com o Google. Verifique a configuração do projeto.',
+                });
+            }
         }
     };
     if (auth && firestore) {
