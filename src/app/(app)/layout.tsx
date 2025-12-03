@@ -6,16 +6,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Car,
-  ChevronDown,
   LayoutDashboard,
-  PanelLeft,
   PlusCircle,
   Settings,
   BarChart3,
   HelpCircle,
 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import {
   SidebarProvider,
   Sidebar,
@@ -37,16 +34,74 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { UserNav } from "@/components/layout/user-nav";
 import { AddFillUpDialog } from "@/components/fuel/add-fill-up-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { vehicles } from "@/lib/dummy-data";
 import { FuelPumpIcon } from "@/components/icons";
 
+const navItems = [
+  { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
+  { href: "/vehicles", icon: <Car />, label: "Veículos" },
+  { href: "/reports", icon: <BarChart3 />, label: "Relatórios" },
+  { href: "/profile", icon: <Settings />, label: "Perfil" },
+];
+
+function MobileSidebar() {
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
+  
+  return (
+    <div className="flex h-full w-full flex-col">
+      <SheetHeader className="p-4 border-b">
+        <Link href="/dashboard" className="flex items-center gap-2" onClick={handleLinkClick}>
+          <FuelPumpIcon className="size-8 text-primary" />
+          <SheetTitle className="text-xl font-semibold">TanqueCheio</SheetTitle>
+        </Link>
+      </SheetHeader>
+      <SidebarContent className="p-4">
+        <SidebarMenu>
+          {navItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+              >
+                <Link href={item.href} onClick={handleLinkClick}>
+                  {item.icon}
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter className="p-4 mt-auto border-t">
+        <Button variant="outline" className="w-full justify-start" asChild>
+          <Link href="/help" onClick={handleLinkClick}>
+            <HelpCircle className="mr-2"/>
+            <span>Ajuda & Suporte</span>
+          </Link>
+        </Button>
+      </SidebarFooter>
+    </div>
+  );
+}
+
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { open, setOpen, toggleSidebar } = useSidebar();
+  const { openMobile, setOpenMobile, toggleSidebar, setOpen } = useSidebar();
   const isMobile = useIsMobile();
 
   React.useEffect(() => {
@@ -62,25 +117,15 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const [key, setKey] = React.useState(0);
   React.useEffect(() => {
     setKey(prev => prev + 1);
-    if(isMobile && open){
-        setOpen(false);
-    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
-
-  const navItems = [
-    { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
-    { href: "/vehicles", icon: <Car />, label: "Veículos" },
-    { href: "/reports", icon: <BarChart3 />, label: "Relatórios" },
-    { href: "/profile", icon: <Settings />, label: "Perfil" },
-  ];
 
   return (
       <>
       <Sidebar
         variant="sidebar"
         collapsible="icon"
-        className="border-r border-sidebar-border"
+        className="border-r border-sidebar-border hidden md:flex"
       >
         <SidebarHeader className="p-4">
           <Link href="/dashboard" className="flex items-center gap-2">
@@ -120,9 +165,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           </Button>
         </SidebarFooter>
       </Sidebar>
+      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+        <SheetContent side="left" className="w-[18rem] p-0 flex">
+            <MobileSidebar />
+        </SheetContent>
+      </Sheet>
       <SidebarInset>
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
-          <SidebarTrigger className="md:hidden" onClick={toggleSidebar} />
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
+          <SidebarTrigger className="flex md:hidden" onClick={toggleSidebar} />
           <div className="flex w-full items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
                <Select defaultValue="main-vehicle">
@@ -147,7 +197,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
-         <div className="md:hidden fixed bottom-4 right-4">
+         <div className="md:hidden fixed bottom-4 right-4 z-40">
             <AddFillUpDialog>
                 <Button size="icon" className="w-14 h-14 rounded-full shadow-lg">
                   <PlusCircle className="h-6 w-6" />
@@ -168,3 +218,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   )
 }
+
+    
