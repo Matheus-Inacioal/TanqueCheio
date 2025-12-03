@@ -46,10 +46,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { FuelPumpIcon } from "@/components/icons";
 import { useUser, useFirestore, useCollection, useAuth } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
-import { collection, query, where } from "firebase/firestore";
+import { collection, query } from "firebase/firestore";
 import type { Vehicle } from "@/lib/types";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
-import { signInAnonymously } from "firebase/auth";
 
 const navItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
@@ -110,14 +109,13 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
-  const auth = useAuth();
   const router = useRouter();
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
-      signInAnonymously(auth);
+      router.replace('/login');
     }
-  }, [isUserLoading, user, auth]);
+  }, [isUserLoading, user, router]);
 
 
   const vehiclesQuery = useMemoFirebase(() => {
@@ -153,7 +151,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       <div className="flex items-center justify-center h-screen">
         <div className="flex flex-col items-center gap-4">
           <FuelPumpIcon className="size-12 text-primary animate-pulse" />
-          <Skeleton className="h-4 w-48" />
+          <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
     )
@@ -261,3 +259,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   )
 }
+
+    
