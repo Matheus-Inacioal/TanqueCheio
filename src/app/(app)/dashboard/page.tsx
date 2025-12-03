@@ -76,30 +76,30 @@ export default function DashboardPage() {
     const recentActivities = fuelLogs.slice(0, 4).map((log) => ({
         id: log.id,
         vehicle: vehicleName,
-        description: `Abastecimento de ${log.liters.toFixed(1)}L`,
-        date: format(log.date.toDate(), "dd MMM yyyy", { locale: ptBR }),
+        description: `Abastecimento de ${(log.liters || 0).toFixed(1)}L`,
+        date: log.date ? format(log.date.toDate(), "dd MMM yyyy", { locale: ptBR }) : 'Data desconhecida',
         type: "fill-up" as const,
     }));
 
     const now = new Date();
     const currentMonthLogs = fuelLogs.filter(log => {
-        const logDate = log.date.toDate();
-        return logDate.getMonth() === now.getMonth() && logDate.getFullYear() === now.getFullYear();
+        const logDate = log.date?.toDate();
+        return logDate && logDate.getMonth() === now.getMonth() && logDate.getFullYear() === now.getFullYear();
     });
 
-    const monthlyCost = currentMonthLogs.reduce((sum, log) => sum + log.cost, 0);
+    const monthlyCost = currentMonthLogs.reduce((sum, log) => sum + (log.cost || 0), 0);
 
     let monthlyDistance = 0;
     if (currentMonthLogs.length > 1) {
-        const sorted = [...currentMonthLogs].sort((a, b) => a.odometer - b.odometer);
-        monthlyDistance = sorted[sorted.length - 1].odometer - sorted[0].odometer;
+        const sorted = [...currentMonthLogs].sort((a, b) => (a.odometer || 0) - (b.odometer || 0));
+        monthlyDistance = (sorted[sorted.length - 1].odometer || 0) - (sorted[0].odometer || 0);
     }
 
     let avgConsumption = 0;
     if (fuelLogs.length > 1) {
-        const sortedLogs = [...fuelLogs].sort((a, b) => a.odometer - b.odometer);
-        const totalDistance = sortedLogs[sortedLogs.length - 1].odometer - sortedLogs[0].odometer;
-        const totalLiters = sortedLogs.slice(1).reduce((acc, log) => acc + log.liters, 0);
+        const sortedLogs = [...fuelLogs].sort((a, b) => (a.odometer || 0) - (b.odometer || 0));
+        const totalDistance = (sortedLogs[sortedLogs.length - 1].odometer || 0) - (sortedLogs[0].odometer || 0);
+        const totalLiters = sortedLogs.slice(1).reduce((acc, log) => acc + (log.liters || 0), 0);
         if (totalLiters > 0) {
             avgConsumption = totalDistance / totalLiters;
         }
@@ -108,16 +108,16 @@ export default function DashboardPage() {
     const summaryData = [
         { title: "Consumo Médio", value: avgConsumption.toFixed(1), unit: "km/L" },
         { title: "Gasto Mensal", value: `R$ ${monthlyCost.toFixed(2)}` },
-        { title: "Último Abastecimento", value: `${lastFillUp.liters.toFixed(1)} L`, subValue: `R$ ${lastFillUp.cost.toFixed(2)}` },
+        { title: "Último Abastecimento", value: `${(lastFillUp.liters || 0).toFixed(1)} L`, subValue: `R$ ${(lastFillUp.cost || 0).toFixed(2)}` },
         { title: "Distância Mensal", value: `${monthlyDistance.toLocaleString('pt-BR')} km` },
     ];
 
     const costData = Array.from({ length: 6 }).map((_, i) => {
         const d = subMonths(new Date(), i);
         const cost = fuelLogs.filter(log => {
-            const logDate = log.date.toDate();
-            return logDate.getMonth() === d.getMonth() && logDate.getFullYear() === d.getFullYear();
-        }).reduce((sum, log) => sum + log.cost, 0);
+            const logDate = log.date?.toDate();
+            return logDate && logDate.getMonth() === d.getMonth() && logDate.getFullYear() === d.getFullYear();
+        }).reduce((sum, log) => sum + (log.cost || 0), 0);
         const monthName = format(d, 'MMM', { locale: ptBR });
         return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost };
     }).reverse();
@@ -126,10 +126,10 @@ export default function DashboardPage() {
         if (index === 0) return null;
         const prevLog = arr[index - 1];
         if (!prevLog) return null;
-        const distance = log.odometer - prevLog.odometer;
+        const distance = (log.odometer || 0) - (prevLog.odometer || 0);
         const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
         return {
-            date: format(log.date.toDate(), "dd/MM"),
+            date: log.date ? format(log.date.toDate(), "dd/MM") : 'N/A',
             consumption: parseFloat(consumption.toFixed(1))
         }
     }).filter(Boolean);
