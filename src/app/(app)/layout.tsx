@@ -42,16 +42,17 @@ import {
 import { UserNav } from "@/components/layout/user-nav";
 import { AddFillUpDialog } from "@/components/fuel/add-fill-up-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { vehicles } from "@/lib/dummy-data";
 import { FuelPumpIcon } from "@/components/icons";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore, useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { collection, query, where } from "firebase/firestore";
+import type { Vehicle } from "@/lib/types";
 
 const navItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
   { href: "/vehicles", icon: <Car />, label: "Veículos" },
   { href: "/reports", icon: <BarChart3 />, label: "Relatórios" },
-  { href: "/profile", icon: <Settings />, label: "Perfil" },
+  { href: "/settings", icon: <Settings />, label: "Configurações" },
 ];
 
 function MobileSidebar() {
@@ -105,7 +106,19 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const { openMobile, setOpenMobile, setOpen } = useSidebar();
   const isMobile = useIsMobile();
   const { user, isLoading: isUserLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
+
+  const vehiclesQuery = React.useMemo(() => {
+    if (!user) return null;
+    return query(collection(firestore, `users/${user.uid}/vehicles`));
+  }, [user, firestore]);
+  const { data: vehicles, isLoading: areVehiclesLoading } = useCollection<Vehicle>(vehiclesQuery as any);
+
+  const primaryVehicle = React.useMemo(() => {
+    return vehicles?.find(v => v.isPrimary);
+  }, [vehicles]);
+
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
@@ -195,7 +208,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           <SidebarTrigger className="flex md:hidden" />
           <div className="flex w-full items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
-               <Select defaultValue="main-vehicle">
+              {areVehiclesLoading ? (
+                 <Skeleton className="h-9 w-[200px]" />
+              ) : vehicles && vehicles.length > 0 ? (
+               <Select defaultValue={primaryVehicle?.id}>
                 <SelectTrigger className="w-[200px] bg-transparent border-0 shadow-none focus:ring-0">
                   <SelectValue placeholder="Selecionar Veículo" />
                 </SelectTrigger>
@@ -205,6 +221,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   ))}
                 </SelectContent>
               </Select>
+              ) : null}
               <AddFillUpDialog>
                 <Button>
                   <PlusCircle className="mr-2 h-4 w-4" /> Novo Abastecimento
