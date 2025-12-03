@@ -41,8 +41,9 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { writeBatch, collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -57,6 +58,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const { user, isLoading: isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -141,6 +143,87 @@ export default function ProfilePage() {
         description: "Seus dados estão sendo baixados em formato JSON."
     })
   }
+
+  const handleSeedData = async () => {
+    if (!user || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Usuário ou Firestore não disponível.',
+      });
+      return;
+    }
+
+    try {
+      const batch = writeBatch(firestore);
+
+      // 1. Create a vehicle
+      const vehicleRef = doc(collection(firestore, `users/${user.uid}/vehicles`));
+      const vehicleData = {
+        name: 'Onix 2023',
+        licensePlate: 'BRA2E19',
+        fuelType: 'Flex',
+        initialOdometer: 15000,
+        isPrimary: true,
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+      };
+      batch.set(vehicleRef, vehicleData);
+
+      // 2. Create Fuel Logs
+      const fuelLogsRef = collection(firestore, `users/${user.uid}/vehicles/${vehicleRef.id}/fuelLogs`);
+      let currentOdometer = 15230;
+      let currentDate = new Date();
+      for (let i = 0; i < 10; i++) {
+        const logRef = doc(fuelLogsRef);
+        const liters = 30 + Math.random() * 15; // 30 to 45 liters
+        const pricePerLiter = 5.5 + Math.random() * 0.5; // R$5,50 to R$6,00
+        const cost = liters * pricePerLiter;
+        
+        batch.set(logRef, {
+          vehicleId: vehicleRef.id,
+          userId: user.uid,
+          date: Timestamp.fromDate(new Date(currentDate.getTime() - i * 10 * 24 * 60 * 60 * 1000)), // Every 10 days
+          odometer: currentOdometer,
+          cost,
+          pricePerLiter,
+          liters,
+          fuelType: 'Gasoline',
+          createdAt: serverTimestamp(),
+        });
+        currentOdometer += 350 + Math.random() * 100; // 350-450 km per fill-up
+      }
+      
+      // 3. Create a Maintenance Alert
+      const maintenanceAlertsRef = collection(firestore, `users/${user.uid}/maintenanceAlerts`);
+      const alertRef = doc(maintenanceAlertsRef);
+      batch.set(alertRef, {
+        vehicleId: vehicleRef.id,
+        vehicleName: vehicleData.name,
+        name: 'Troca de Óleo',
+        intervalKm: 10000,
+        lastServiceOdometer: 15000,
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+      });
+
+      await batch.commit();
+
+      toast({
+        title: 'Dados criados!',
+        description: 'Veículo, abastecimentos e alertas foram criados com sucesso.',
+      });
+
+    } catch (error) {
+      console.error('Erro ao popular dados:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao criar dados',
+        description: 'Não foi possível popular o banco de dados.',
+      });
+    }
+  };
+
 
   if (isUserLoading) {
     return (
@@ -252,6 +335,24 @@ export default function ProfilePage() {
               <CardFooter className="border-t px-6 py-4">
                 <Button type="submit">Salvar alterações</Button>
               </CardFooter>
+          </Card>
+          
+          {/* Desenvolvedor */}
+          <Card>
+              <CardHeader>
+                <CardTitle>Desenvolvedor</CardTitle>
+                <CardDescription>
+                  Ações para teste e desenvolvimento do aplicativo.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                   <Button variant="outline" onClick={handleSeedData}>
+                      Popular com Dados de Exemplo
+                  </Button>
+                   <FormDescription className="pt-2">
+                      Isso criará um veículo, 10 abastecimentos e 1 alerta de manutenção.
+                  </FormDescription>
+              </CardContent>
           </Card>
 
           {/* Preferências */}
