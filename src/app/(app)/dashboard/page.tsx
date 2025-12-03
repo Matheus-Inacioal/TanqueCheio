@@ -47,15 +47,20 @@ export default function DashboardPage() {
   const { data: fuelLogs, isLoading: areFuelLogsLoading } = useCollection<FillUp>(fuelLogsQuery);
 
   const { summaryData, recentActivities, costData, consumptionData } = useMemo(() => {
-    const emptySummary = [
-      { icon: <Gauge className="text-primary" />, title: "Consumo Médio", value: "0.0", unit: "km/L" },
-      { icon: <Wallet className="text-primary" />, title: "Gasto Mensal", value: "R$ 0,00" },
-      { icon: <Droplets className="text-primary" />, title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
-      { icon: <Car className="text-primary" />, title: "Distância Mensal", value: "0 km" },
-    ];
+    const emptyState = {
+        summaryData: [
+            { icon: <Gauge className="text-primary" />, title: "Consumo Médio", value: "0.0", unit: "km/L" },
+            { icon: <Wallet className="text-primary" />, title: "Gasto Mensal", value: "R$ 0,00" },
+            { icon: <Droplets className="text-primary" />, title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
+            { icon: <Car className="text-primary" />, title: "Distância Mensal", value: "0 km" },
+        ],
+        recentActivities: [],
+        costData: [],
+        consumptionData: [],
+    };
 
     if (!fuelLogs || fuelLogs.length === 0) {
-      return { summaryData: emptySummary, recentActivities: [], costData: [], consumptionData: [] };
+        return emptyState;
     }
 
     // Recent Activities
@@ -90,6 +95,7 @@ export default function DashboardPage() {
     if (fuelLogs.length > 1) {
         const sortedLogs = [...fuelLogs].sort((a,b) => a.odometer - b.odometer);
         const totalDistance = sortedLogs[sortedLogs.length - 1].odometer - sortedLogs[0].odometer;
+        // Exclude the first fill-up's liters from consumption calculation
         const totalLiters = sortedLogs.slice(1).reduce((acc, log) => acc + log.liters, 0);
         if (totalLiters > 0) {
             avgConsumption = totalDistance / totalLiters;
@@ -126,18 +132,19 @@ export default function DashboardPage() {
     const costData = Array.from({ length: 6 }).map((_, i) => {
         const d = new Date();
         d.setMonth(d.getMonth() - i);
-        const month = d.toLocaleString('default', { month: 'short' });
+        const monthName = d.toLocaleString('default', { month: 'short' });
         const year = d.getFullYear();
-        const monthlyCost = fuelLogs.filter(log => {
+        const cost = fuelLogs.filter(log => {
             const logDate = log.date.toDate();
             return logDate.getMonth() === d.getMonth() && logDate.getFullYear() === year;
         }).reduce((sum, log) => sum + log.cost, 0);
-        return { month, cost: monthlyCost };
+        return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost };
     }).reverse();
 
-    const consumptionData = fuelLogs.slice(0, 6).reverse().map((log, index, arr) => {
+    const consumptionData = fuelLogs.slice(0, 10).reverse().map((log, index, arr) => {
         if (index === 0) return null;
         const prevLog = arr[index - 1];
+        if(!prevLog) return null;
         const distance = log.odometer - prevLog.odometer;
         const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
         return {
@@ -215,5 +222,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
