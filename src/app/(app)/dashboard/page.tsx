@@ -90,7 +90,7 @@ export default function DashboardPage() {
     const monthlyCost = monthlyLogs.reduce((sum, log) => sum + log.cost, 0);
     
     let monthlyDistance = 0;
-    if (monthlyLogs.length > 0) {
+    if (monthlyLogs.length > 1) {
       const firstOdometerThisMonth = Math.min(...monthlyLogs.map(l => l.odometer));
       const lastOdometerThisMonth = Math.max(...monthlyLogs.map(l => l.odometer));
       monthlyDistance = lastOdometerThisMonth - firstOdometerThisMonth;
