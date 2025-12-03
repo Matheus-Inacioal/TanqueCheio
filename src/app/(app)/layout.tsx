@@ -44,7 +44,7 @@ import { AddFillUpDialog } from "@/components/fuel/add-fill-up-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { vehicles } from "@/lib/dummy-data";
 import { FuelPumpIcon } from "@/components/icons";
-import { FirebaseClientProvider, useUser } from "@/firebase";
+import { useUser } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const navItems = [
@@ -233,12 +233,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <FirebaseClientProvider>
-      <SidebarProvider>
-        <AppLayoutContent>{children}</AppLayoutContent>
-      </SidebarProvider>
-    </FirebaseClientProvider>
+    <SidebarProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </SidebarProvider>
   )
 }
-
-    
