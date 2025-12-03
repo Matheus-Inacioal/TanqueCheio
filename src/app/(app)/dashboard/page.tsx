@@ -17,7 +17,7 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useUser, useFirestore, useCollection, type WithId } from "@/firebase";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
 import { collection, query, where, orderBy, limit } from "firebase/firestore";
-import type { Vehicle, FillUp } from "@/lib/types";
+import type { FillUp, Vehicle } from "@/lib/types";
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -47,13 +47,14 @@ export default function DashboardPage() {
   const { data: fuelLogs, isLoading: areFuelLogsLoading } = useCollection<FillUp>(fuelLogsQuery);
 
   const { summaryData, recentActivities, costData, consumptionData } = useMemo(() => {
+    const emptySummary = [
+      { icon: <Gauge className="text-primary" />, title: "Consumo Médio", value: "0", unit: "km/L" },
+      { icon: <Wallet className="text-primary" />, title: "Gasto Mensal", value: "R$ 0,00" },
+      { icon: <Droplets className="text-primary" />, title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
+      { icon: <Car className="text-primary" />, title: "Distância Mensal", value: "0 km" },
+    ];
+
     if (!fuelLogs || fuelLogs.length === 0) {
-      const emptySummary = [
-        { icon: <Gauge className="text-primary" />, title: "Consumo Médio", value: "0", unit: "km/L" },
-        { icon: <Wallet className="text-primary" />, title: "Gasto Mensal", value: "R$ 0,00" },
-        { icon: <Droplets className="text-primary" />, title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
-        { icon: <Car className="text-primary" />, title: "Distância Mensal", value: "0 km" },
-      ];
       return { summaryData: emptySummary, recentActivities: [], costData: [], consumptionData: [] };
     }
 
@@ -111,8 +112,8 @@ export default function DashboardPage() {
       {
         icon: <Droplets className="text-primary" />,
         title: "Último Abastecimento",
-        value: `${lastFillUp.liters.toFixed(1)} L`,
-        subValue: `R$ ${lastFillUp.cost.toFixed(2)}`,
+        value: lastFillUp ? `${lastFillUp.liters.toFixed(1)} L` : '0 L',
+        subValue: lastFillUp ? `R$ ${lastFillUp.cost.toFixed(2)}` : 'R$ 0,00',
       },
       {
         icon: <Car className="text-primary" />,
