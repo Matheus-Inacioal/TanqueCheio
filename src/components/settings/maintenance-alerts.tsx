@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCollection, useFirestore, useUser, type WithId } from "@/firebase";
-import { useMemo } from "react";
+import { useMemoFirebase } from "@/hooks/use-memo-firebase";
 import { collection, query, orderBy, doc, deleteDoc } from "firebase/firestore";
 import type { MaintenanceAlert } from "@/lib/types";
 import { Skeleton } from "../ui/skeleton";
@@ -22,7 +22,7 @@ export function MaintenanceAlerts() {
     const firestore = useFirestore();
     const { toast } = useToast();
 
-    const alertsQuery = useMemo(() => {
+    const alertsQuery = useMemoFirebase(() => {
         if (!user) return null;
         // This query is simplified. In a real app, you would likely query across all vehicle subcollections.
         // For now, we assume a flat structure or need to improve this query later.
@@ -30,7 +30,7 @@ export function MaintenanceAlerts() {
         return query(ref, orderBy('createdAt', 'desc'));
     }, [user, firestore]);
 
-    const { data: maintenanceAlerts, isLoading: areAlertsLoading } = useCollection<MaintenanceAlert>(alertsQuery as any);
+    const { data: maintenanceAlerts, isLoading: areAlertsLoading } = useCollection<MaintenanceAlert>(alertsQuery);
 
     const handleDelete = async (alertId: string) => {
         if (!user) return;
