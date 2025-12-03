@@ -72,25 +72,22 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
   });
 
   React.useEffect(() => {
-    if (open && vehicles && vehicles.length > 0) {
-        const primaryVehicle = vehicles.find(v => v.isPrimary);
-        if (primaryVehicle) {
-            form.setValue("vehicleId", primaryVehicle.id);
-        } else if (vehicles.length > 0) {
-            form.setValue("vehicleId", vehicles[0].id);
-        }
+    if (open) {
+      // Define os valores padrão quando o diálogo é aberto
+      const primaryVehicle = vehicles?.find(v => v.isPrimary);
+      const defaultVehicleId = primaryVehicle?.id || vehicles?.[0]?.id || "";
+      
+      form.reset({
+        vehicleId: defaultVehicleId,
+        date: new Date(),
+        odometer: 0,
+        liters: 0,
+        totalCost: 0,
+        fuelType: undefined,
+      });
     }
-    if (!open) {
-        form.reset({
-            vehicleId: "",
-            date: new Date(),
-            odometer: 0,
-            liters: 0,
-            totalCost: 0,
-            fuelType: undefined,
-        });
-    }
-  }, [vehicles, open, form]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vehicles, open]);
 
   const handleSubmit = async (values: AddFillUpFormValues) => {
     if (!user) return;
@@ -139,7 +136,7 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Veículo</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value ?? ""} defaultValue={field.value ?? ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um veículo" />
@@ -198,13 +195,13 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
                 />
 
                 <FormField control={form.control} name="odometer" render={({ field }) => (
-                    <FormItem><FormLabel>Odômetro (km)</FormLabel><FormControl><Input type="number" placeholder="ex: 50123" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Odômetro (km)</FormLabel><FormControl><Input type="number" placeholder="ex: 50123" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                 )}/>
                 <FormField control={form.control} name="liters" render={({ field }) => (
-                    <FormItem><FormLabel>Litros</FormLabel><FormControl><Input type="number" step="0.01" placeholder="ex: 42.5" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Litros</FormLabel><FormControl><Input type="number" step="0.01" placeholder="ex: 42.5" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                 )}/>
                  <FormField control={form.control} name="totalCost" render={({ field }) => (
-                    <FormItem><FormLabel>Custo Total (R$)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="ex: 215.50" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Custo Total (R$)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="ex: 215.50" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                 )}/>
 
                 <FormField
@@ -213,7 +210,7 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Combustível</FormLabel>
-                             <Select onValueChange={field.onChange} value={field.value}>
+                             <Select onValueChange={field.onChange} value={field.value ?? ""}>
                                 <FormControl>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Selecione o tipo de combustível" />
