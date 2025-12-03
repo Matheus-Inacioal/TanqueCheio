@@ -24,8 +24,8 @@ type RecentActivity = {
 };
 
 type ChartData = {
-  month: string;
-  cost: number;
+    month: string;
+    cost: number;
 };
 
 type ConsumptionChartData = {
@@ -136,13 +136,16 @@ function processData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle: WithId<V
 
 export function useDashboardData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle: WithId<Vehicle> | undefined, areFuelLogsLoading: boolean) {
   return useMemo(() => {
+    if (areFuelLogsLoading) {
+      return processData(null, primaryVehicle);
+    }
     return processData(fuelLogs, primaryVehicle);
   }, [fuelLogs, primaryVehicle, areFuelLogsLoading]);
 }
 
 export function useReportsData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle: WithId<Vehicle> | undefined, areFuelLogsLoading: boolean, currentDate: Date) {
     return useMemo(() => {
-        if (!fuelLogs || fuelLogs.length === 0) {
+        if (areFuelLogsLoading || !fuelLogs || fuelLogs.length === 0) {
             return {
                 monthlyCostData: [],
                 monthlyConsumptionData: [],
