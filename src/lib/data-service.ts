@@ -45,7 +45,6 @@ type ProcessedData = {
  * @param primaryVehicle O veículo principal para associar os dados.
  */
 function getMockData(primaryVehicle: WithId<Vehicle> | undefined): ProcessedData {
-  const vehicleName = primaryVehicle?.name || 'Veículo Exemplo';
   const now = new Date();
 
   // Gera 10 abastecimentos fictícios nos últimos 3 meses
@@ -79,10 +78,14 @@ function getMockData(primaryVehicle: WithId<Vehicle> | undefined): ProcessedData
  * @param primaryVehicle O veículo principal.
  */
 function processData(fuelLogs: WithId<FillUp>[], primaryVehicle: WithId<Vehicle> | undefined): ProcessedData {
-    const vehicleName = primaryVehicle?.name || 'Veículo';
-
     // Se não houver logs, retorna um estado completamente zerado.
     if (!fuelLogs || fuelLogs.length === 0) {
+        const emptyCostData = Array.from({ length: 6 }).map((_, i) => {
+            const d = subMonths(new Date(), i);
+            const monthName = format(d, 'MMM', { locale: ptBR });
+            return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
+        }).reverse();
+
         return {
             summaryData: [
                 { title: "Consumo Médio", value: "0.0", unit: "km/L" },
@@ -91,15 +94,12 @@ function processData(fuelLogs: WithId<FillUp>[], primaryVehicle: WithId<Vehicle>
                 { title: "Distância Mensal", value: "0 km" },
             ],
             recentActivities: [],
-            costData: Array.from({ length: 6 }).map((_, i) => {
-                const d = subMonths(new Date(), i);
-                const monthName = format(d, 'MMM', { locale: ptBR });
-                return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
-            }).reverse(),
+            costData: emptyCostData,
             consumptionData: [],
         };
     }
-
+    
+    const vehicleName = primaryVehicle?.name || 'Veículo';
     const lastFillUp = fuelLogs[0];
 
     const recentActivities = fuelLogs.slice(0, 4).map((log) => ({
@@ -137,7 +137,7 @@ function processData(fuelLogs: WithId<FillUp>[], primaryVehicle: WithId<Vehicle>
     const summaryData = [
       { title: "Consumo Médio", value: avgConsumption.toFixed(1), unit: "km/L" },
       { title: "Gasto Mensal", value: `R$ ${monthlyCost.toFixed(2)}`},
-      { title: "Último Abastecimento", value: `${lastFillUp.liters.toFixed(1)} L`, subValue: `R$ ${lastFillUp.cost.toFixed(2)}`},
+      { title: "Último Abastecimento", value: lastFillUp ? `${lastFillUp.liters.toFixed(1)} L` : '0 L', subValue: lastFillUp ? `R$ ${lastFillUp.cost.toFixed(2)}` : 'R$ 0,00'},
       { title: "Distância Mensal", value: `${monthlyDistance.toLocaleString('pt-BR')} km`},
     ];
 
@@ -168,7 +168,7 @@ function processData(fuelLogs: WithId<FillUp>[], primaryVehicle: WithId<Vehicle>
 
 export function useDashboardData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle: WithId<Vehicle> | undefined, areFuelLogsLoading: boolean) {
   return useMemo(() => {
-    // Se estiver carregando, não faça nada ainda.
+    // Se estiver carregando, retorne um estado vazio para os componentes de UI lidarem.
     if (areFuelLogsLoading) {
       return processData([], undefined);
     }

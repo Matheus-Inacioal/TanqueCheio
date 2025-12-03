@@ -14,7 +14,7 @@ import ConsumptionChart from "@/components/dashboard/consumption-chart";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { useUser, useFirestore, useCollection, type WithId } from "@/firebase";
+import { useUser, useFirestore, useCollection } from "@/firebase";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import type { FillUp, Vehicle } from "@/lib/types";
