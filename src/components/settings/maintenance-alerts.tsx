@@ -12,29 +12,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCollection, useFirestore, useUser, type WithId } from "@/firebase";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
-import { collection, query, orderBy, doc, deleteDoc } from "firebase/firestore";
-import type { MaintenanceAlert } from "@/lib/types";
+import { collection, query, where, doc, deleteDoc, getDocs, collectionGroup } from "firebase/firestore";
+import type { MaintenanceAlert, Vehicle } from "@/lib/types";
 import { Skeleton } from "../ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import React from "react";
 
 export function MaintenanceAlerts() {
     const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
 
+    // Query to get all maintenance alerts for the current user across all vehicles
     const alertsQuery = useMemoFirebase(() => {
         if (!user) return null;
-        // This query is simplified. In a real app, you would likely query across all vehicle subcollections.
-        // For now, we assume a flat structure or need to improve this query later.
-        const ref = collection(firestore, `users/${user.uid}/maintenanceAlerts`);
-        return query(ref, orderBy('createdAt', 'desc'));
+        return query(collectionGroup(firestore, 'maintenanceAlerts'), where('userId', '==', user.uid));
     }, [user, firestore]);
 
     const { data: maintenanceAlerts, isLoading: areAlertsLoading } = useCollection<MaintenanceAlert>(alertsQuery);
 
-    const handleDelete = async (alertId: string) => {
+    const handleDelete = async (alert: WithId<MaintenanceAlert>) => {
         if (!user) return;
-        const alertRef = doc(firestore, `users/${user.uid}/maintenanceAlerts`, alertId);
+        // Construct the correct path to the alert document
+        const alertRef = doc(firestore, `users/${user.uid}/vehicles/${alert.vehicleId}/maintenanceAlerts`, alert.id);
         try {
             await deleteDoc(alertRef);
             toast({
@@ -50,7 +50,6 @@ export function MaintenanceAlerts() {
             });
         }
     };
-
 
   return (
     <Card>
@@ -99,7 +98,7 @@ export function MaintenanceAlerts() {
                             </p>
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(alert.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(alert)}>
                         <Trash2 className="w-4 h-4 text-muted-foreground" />
                         <span className="sr-only">Excluir Alerta</span>
                     </Button>

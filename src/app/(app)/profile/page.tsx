@@ -195,7 +195,7 @@ export default function ProfilePage() {
       }
       
       // 3. Create a Maintenance Alert
-      const maintenanceAlertsRef = collection(firestore, `users/${user.uid}/maintenanceAlerts`);
+      const maintenanceAlertsRef = collection(firestore, `users/${user.uid}/vehicles/${vehicleRef.id}/maintenanceAlerts`);
       const alertRef = doc(maintenanceAlertsRef);
       batch.set(alertRef, {
         vehicleId: vehicleRef.id,
