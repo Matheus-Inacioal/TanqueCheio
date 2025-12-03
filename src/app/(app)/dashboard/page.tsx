@@ -58,7 +58,7 @@ export default function DashboardPage() {
         costData: Array.from({ length: 6 }).map((_, i) => {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
-            const monthName = d.toLocaleString('default', { month: 'short' });
+            const monthName = d.toLocaleString('pt-BR', { month: 'short' });
             return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
         }).reverse(),
         consumptionData: [],
@@ -88,10 +88,13 @@ export default function DashboardPage() {
     });
 
     const monthlyCost = monthlyLogs.reduce((sum, log) => sum + log.cost, 0);
-
-    const firstOdometerThisMonth = monthlyLogs.length > 0 ? Math.min(...monthlyLogs.map(l => l.odometer)) : 0;
-    const lastOdometerThisMonth = monthlyLogs.length > 0 ? Math.max(...monthlyLogs.map(l => l.odometer)) : 0;
-    const monthlyDistance = lastOdometerThisMonth - firstOdometerThisMonth;
+    
+    let monthlyDistance = 0;
+    if (monthlyLogs.length > 0) {
+      const firstOdometerThisMonth = Math.min(...monthlyLogs.map(l => l.odometer));
+      const lastOdometerThisMonth = Math.max(...monthlyLogs.map(l => l.odometer));
+      monthlyDistance = lastOdometerThisMonth - firstOdometerThisMonth;
+    }
 
     const lastFillUp = fuelLogs[0];
 
@@ -100,7 +103,7 @@ export default function DashboardPage() {
     if (fuelLogs.length > 1) {
         const sortedLogs = [...fuelLogs].sort((a,b) => a.odometer - b.odometer);
         const totalDistance = sortedLogs[sortedLogs.length - 1].odometer - sortedLogs[0].odometer;
-        // Exclude the first fill-up's liters from consumption calculation
+        // Exclude the first fill-up's liters from consumption calculation for accuracy
         const totalLiters = sortedLogs.slice(1).reduce((acc, log) => acc + log.liters, 0);
         if (totalLiters > 0) {
             avgConsumption = totalDistance / totalLiters;
@@ -137,7 +140,7 @@ export default function DashboardPage() {
     const costData = Array.from({ length: 6 }).map((_, i) => {
         const d = new Date();
         d.setMonth(d.getMonth() - i);
-        const monthName = d.toLocaleString('default', { month: 'short' });
+        const monthName = d.toLocaleString('pt-BR', { month: 'short' });
         const year = d.getFullYear();
         const cost = fuelLogs.filter(log => {
             const logDate = log.date.toDate();
