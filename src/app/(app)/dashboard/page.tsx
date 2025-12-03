@@ -152,9 +152,9 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
+        <span className="text-muted-foreground">
           Visão geral das suas despesas e consumo de combustível para o veículo: <strong>{isLoading ? <Skeleton className="h-4 w-24 inline-block" /> : primaryVehicle?.name || 'Nenhum'}</strong>
-        </p>
+        </span>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
