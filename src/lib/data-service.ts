@@ -88,8 +88,8 @@ function getMockData(): ProcessedData {
  * @param fuelLogs Array de logs de combustível.
  * @param primaryVehicle O veículo principal.
  */
-function processData(fuelLogs: WithId<FillUp>[], primaryVehicle: WithId<Vehicle> | undefined): ProcessedData {
-    // Se não houver logs, retorna um estado completamente zerado.
+function processData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle: WithId<Vehicle> | undefined): ProcessedData {
+    // Se não houver logs, retorna um estado completamente zerado para evitar erros.
     if (!fuelLogs || fuelLogs.length === 0) {
         const emptyCostData = Array.from({ length: 6 }).map((_, i) => {
             const d = subMonths(new Date(), i);
@@ -181,7 +181,7 @@ export function useDashboardData(fuelLogs: WithId<FillUp>[] | null, primaryVehic
   return useMemo(() => {
     // Se estiver carregando, retorne um estado vazio para os componentes de UI lidarem.
     if (areFuelLogsLoading) {
-      return processData([], undefined);
+      return processData(null, undefined);
     }
     // Se não houver logs de combustível, use os dados mockados.
     if (!fuelLogs || fuelLogs.length === 0) {
@@ -259,5 +259,5 @@ export function useReportsData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle
             noData: monthlyLogs.length === 0,
         };
 
-    }, [fuelLogs, primaryVehicle, areFuelLogsLoading, currentDate]);
+    }, [fuelLogs, areFuelLogsLoading, currentDate]);
 }
