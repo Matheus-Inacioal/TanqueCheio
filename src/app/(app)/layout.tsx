@@ -44,12 +44,11 @@ import { UserNav } from "@/components/layout/user-nav";
 import { AddFillUpDialog } from "@/components/fuel/add-fill-up-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FuelPumpIcon } from "@/components/icons";
-import { useUser, useFirestore, useCollection, useAuth } from "@/firebase";
+import { useUser, useFirestore, useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { collection, query, doc, getDoc, setDoc } from "firebase/firestore";
 import type { Vehicle } from "@/lib/types";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
-import { getRedirectResult } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
