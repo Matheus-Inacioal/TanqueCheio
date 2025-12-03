@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts"
@@ -14,7 +15,12 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { costData as defaultCostData } from "@/lib/dummy-data"
+import { Skeleton } from "../ui/skeleton"
+
+type CostChartData = {
+    month: string;
+    cost: number;
+}
 
 const chartConfig = {
   cost: {
@@ -24,10 +30,11 @@ const chartConfig = {
 }
 
 type CostChartProps = {
-    data?: typeof defaultCostData;
+    data?: CostChartData[];
+    isLoading?: boolean;
 }
 
-export default function CostChart({ data = defaultCostData }: CostChartProps) {
+export default function CostChart({ data = [], isLoading }: CostChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -35,6 +42,9 @@ export default function CostChart({ data = defaultCostData }: CostChartProps) {
         <CardDescription>Gasto mensal nos últimos 6 meses</CardDescription>
       </CardHeader>
       <CardContent>
+      {isLoading ? (
+          <Skeleton className="h-[250px] w-full" />
+        ) : (
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
           <LineChart
             accessibilityLayer
@@ -67,6 +77,7 @@ export default function CostChart({ data = defaultCostData }: CostChartProps) {
             />
           </LineChart>
         </ChartContainer>
+        )}
       </CardContent>
     </Card>
   )

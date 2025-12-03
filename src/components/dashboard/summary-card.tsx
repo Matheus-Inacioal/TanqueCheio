@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "../ui/skeleton";
 
 type SummaryCardProps = {
   icon: React.ReactNode;
@@ -9,6 +10,7 @@ type SummaryCardProps = {
   subValue?: string;
   change?: string;
   changeType?: "increase" | "decrease";
+  isLoading?: boolean;
 };
 
 export default function SummaryCard({
@@ -19,6 +21,7 @@ export default function SummaryCard({
   subValue,
   change,
   changeType,
+  isLoading
 }: SummaryCardProps) {
   return (
     <Card>
@@ -27,13 +30,20 @@ export default function SummaryCard({
         <div className="text-muted-foreground">{icon}</div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">
-          {value}
-          {unit && <span className="text-base font-normal text-muted-foreground ml-1">{unit}</span>}
-        </div>
-        {subValue && (
-            <p className="text-xs text-muted-foreground">{subValue}</p>
+        {isLoading ? (
+            <Skeleton className="h-7 w-3/4" />
+        ) : (
+            <div className="text-2xl font-bold">
+            {value}
+            {unit && <span className="text-base font-normal text-muted-foreground ml-1">{unit}</span>}
+            </div>
         )}
+        {isLoading ? (
+            <Skeleton className="h-3 w-1/2 mt-1" />
+        ) : subValue ? (
+            <p className="text-xs text-muted-foreground">{subValue}</p>
+        ) : null }
+        
         {change && (
           <p
             className={cn(
