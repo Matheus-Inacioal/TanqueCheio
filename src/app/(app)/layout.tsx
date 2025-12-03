@@ -47,6 +47,7 @@ import { useUser, useFirestore, useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { collection, query, where } from "firebase/firestore";
 import type { Vehicle } from "@/lib/types";
+import { useMemoFirebase } from "@/hooks/use-memo-firebase";
 
 const navItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
@@ -109,11 +110,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const firestore = useFirestore();
   const router = useRouter();
 
-  const vehiclesQuery = React.useMemo(() => {
+  const vehiclesQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(firestore, `users/${user.uid}/vehicles`));
   }, [user, firestore]);
-  const { data: vehicles, isLoading: areVehiclesLoading } = useCollection<Vehicle>(vehiclesQuery as any);
+
+  const { data: vehicles, isLoading: areVehiclesLoading } = useCollection<Vehicle>(vehiclesQuery);
 
   const primaryVehicle = React.useMemo(() => {
     return vehicles?.find(v => v.isPrimary);

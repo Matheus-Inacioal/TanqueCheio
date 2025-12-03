@@ -81,3 +81,4 @@ export * from './non-blocking-login';
 export * from './errors';
 export * from './error-emitter';
 export * from './provider';
+export * from '../hooks/use-memo-firebase';
