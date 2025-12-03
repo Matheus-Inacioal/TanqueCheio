@@ -47,6 +47,7 @@ export default function SignupPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { user, isLoading } = useUser();
+  const [isAuthLoading, setIsAuthLoading] = React.useState(true);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
@@ -64,41 +65,41 @@ export default function SignupPage() {
   }, [user, isLoading, router]);
   
   React.useEffect(() => {
-    const handleRedirectResult = async () => {
-        try {
-            const result = await getRedirectResult(auth);
-            if (result?.user) {
-                const userRef = doc(firestore, 'users', result.user.uid);
-                const userSnap = await getDoc(userRef);
-                if (!userSnap.exists()) {
-                    await setDoc(userRef, {
-                        id: result.user.uid,
-                        email: result.user.email,
-                        displayName: result.user.displayName,
-                        photoURL: result.user.photoURL,
-                    });
-                }
-                toast({
-                    title: 'Login bem-sucedido!',
-                    description: 'Bem-vindo de volta.',
-                });
-                router.replace('/dashboard');
-            }
-        } catch (error: any) {
-            console.error('Erro ao processar o resultado do redirecionamento do Google:', error);
-            if (error.code !== 'auth/user-cancelled') {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Falha no Login com Google',
-                    description: 'Não foi possível fazer login com o Google. Verifique a configuração do projeto.',
+    if (auth) {
+      setIsAuthLoading(false);
+      getRedirectResult(auth)
+        .then(async (result) => {
+          if (result?.user) {
+            const userRef = doc(firestore, 'users', result.user.uid);
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    id: result.user.uid,
+                    email: result.user.email,
+                    displayName: result.user.displayName,
+                    photoURL: result.user.photoURL,
                 });
             }
-        }
-    };
-    if (auth && firestore) {
-      handleRedirectResult();
+            toast({
+              title: 'Login bem-sucedido!',
+              description: 'Bem-vindo de volta.',
+            });
+            router.replace('/dashboard');
+          }
+        })
+        .catch((error) => {
+          console.error('Erro no redirect do Google:', error);
+           if (error.code !== 'auth/user-cancelled' && error.code !== 'auth/popup-closed-by-user') {
+            toast({
+              variant: 'destructive',
+              title: 'Falha no Cadastro com Google',
+              description: 'Não foi possível fazer login com o Google. Tente novamente.',
+            });
+          }
+        });
     }
   }, [auth, firestore, router, toast]);
+
 
   const createFirestoreUser = async (user: any, displayName?: string | null) => {
     const userRef = doc(firestore, 'users', user.uid);
@@ -135,6 +136,7 @@ export default function SignupPage() {
   };
   
   const handleGoogleSignIn = async () => {
+    if (isAuthLoading) return;
     const provider = new GoogleAuthProvider();
     try {
       await signInWithRedirect(auth, provider);
@@ -226,7 +228,7 @@ export default function SignupPage() {
             </span>
           </div>
 
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isAuthLoading}>
             <GoogleIcon className="mr-2 h-5 w-5" />
             Cadastrar com Google
           </Button>
