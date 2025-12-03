@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Car, Droplets, Gauge, Wallet } from "lucide-react";
@@ -68,6 +69,7 @@ export default function DashboardPage() {
         return emptyState;
     }
 
+    // From here on, we know fuelLogs has at least one item.
     const lastFillUp = fuelLogs[0];
 
     // Recent Activities
@@ -125,8 +127,8 @@ export default function DashboardPage() {
       {
         icon: <Droplets className="text-primary" />,
         title: "Último Abastecimento",
-        value: lastFillUp ? `${lastFillUp.liters.toFixed(1)} L` : '0 L',
-        subValue: lastFillUp ? `R$ ${lastFillUp.cost.toFixed(2)}` : 'R$ 0,00',
+        value: `${lastFillUp.liters.toFixed(1)} L`,
+        subValue: `R$ ${lastFillUp.cost.toFixed(2)}`,
       },
       {
         icon: <Car className="text-primary" />,
