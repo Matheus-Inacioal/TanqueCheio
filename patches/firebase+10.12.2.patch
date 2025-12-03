@@ -2,12 +2,6 @@ patch-package
 --- a/node_modules/firebase/auth/dist/esm/index.esm.js
 +++ b/node_modules/firebase/auth/dist/esm/index.esm.js
 @@ -1,2 +1,2 @@
--export * from '@firebase/auth/dist/esm/index.esm.js';
-+export * from '@firebase/auth/dist/esm5/index.esm.js';
- //# sourceMappingURL=index.esm.js.map
---- a/node_modules/firebase/firestore/dist/esm/index.esm.js
-+++ b/node_modules/firebase/firestore/dist/esm/index.esm.js
-@@ -1,2 +1,2 @@
--export * from '@firebase/firestore/dist/esm/index.esm.js';
-+export * from '@firebase/firestore/dist/esm5/index.esm.js';
+-export * from '@firebase/auth/dist/esm5/index.esm.js';
++export * from '../../auth/dist/esm5/index.esm.js';
  //# sourceMappingURL=index.esm.js.map
