@@ -3,23 +3,26 @@
 import React, { useMemo, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase, getSdks } from '@/firebase';
+import { FirebaseApp } from 'firebase/app';
+import { Auth } from 'firebase/auth';
+import { Firestore } from 'firebase/firestore';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const firebaseServices = useMemo(() => {
-    // Inicializa o Firebase no lado do cliente, uma vez por montagem de componente.
+  const { app, auth, firestore } = useMemo(() => {
     const app = initializeFirebase();
-    return getSdks(app.firebaseApp);
-  }, []); // O array de dependências vazio garante que isso seja executado apenas uma vez.
+    const { auth, firestore } = getSdks(app);
+    return { app, auth, firestore };
+  }, []);
 
   return (
     <FirebaseProvider
-      firebaseApp={firebaseServices.firebaseApp}
-      auth={firebaseServices.auth}
-      firestore={firebaseServices.firestore}
+      firebaseApp={app}
+      auth={auth}
+      firestore={firestore}
     >
       {children}
     </FirebaseProvider>
