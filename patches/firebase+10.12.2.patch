@@ -1,24 +1,13 @@
-diff --git a/node_modules/firebase/auth/dist/esm/index.esm.js b/node_modules/firebase/auth/dist/esm/index.esm.js
-index 8f3c3b5..54a55c2 100644
+patch-package
 --- a/node_modules/firebase/auth/dist/esm/index.esm.js
 +++ b/node_modules/firebase/auth/dist/esm/index.esm.js
 @@ -1,2 +1,2 @@
 -export * from '@firebase/auth/dist/esm/index.esm.js';
-+export * from '@firebase/auth';
++export * from '@firebase/auth/dist/esm5/index.esm.js';
  //# sourceMappingURL=index.esm.js.map
-diff --git a/node_modules/firebase/app/dist/esm/index.esm.js b/node_modules/firebase/app/dist/esm/index.esm.js
-index 5c399b1..e31c2c4 100644
---- a/node_modules/firebase/app/dist/esm/index.esm.js
-+++ b/node_modules/firebase/app/dist/esm/index.esm.js
-@@ -1,2 +1,2 @@
--export * from '@firebase/app/dist/esm/index.esm.js';
-+export * from '@firebase/app';
- //# sourceMappingURL=index.esm.js.map
-diff --git a/node_modules/firebase/firestore/dist/esm/index.esm.js b/node_modules/firebase/firestore/dist/esm/index.esm.js
-index 9e4f208..f192bda 100644
 --- a/node_modules/firebase/firestore/dist/esm/index.esm.js
 +++ b/node_modules/firebase/firestore/dist/esm/index.esm.js
 @@ -1,2 +1,2 @@
 -export * from '@firebase/firestore/dist/esm/index.esm.js';
-+export * from '@firebase/firestore';
++export * from '@firebase/firestore/dist/esm5/index.esm.js';
  //# sourceMappingURL=index.esm.js.map
