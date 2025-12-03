@@ -196,9 +196,19 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {isLoading && <p>Carregando atividades...</p>}
+            {isLoading && Array.from({length: 3}).map((_, i) => (
+                <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-[250px]" />
+                        <Skeleton className="h-4 w-[200px]" />
+                    </div>
+                </div>
+            ))}
             {!isLoading && recentActivities.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma atividade recente para exibir.</p>
+                <div className="text-center py-12">
+                     <p className="text-sm text-muted-foreground">Nenhuma atividade recente para exibir.</p>
+                </div>
             )}
             {recentActivities.map((activity) => (
               <div
