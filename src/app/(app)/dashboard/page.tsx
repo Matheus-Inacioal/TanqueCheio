@@ -108,7 +108,7 @@ export default function DashboardPage() {
     const summaryData = [
         { title: "Consumo Médio", value: avgConsumption.toFixed(1), unit: "km/L" },
         { title: "Gasto Mensal", value: `R$ ${monthlyCost.toFixed(2)}` },
-        { title: "Último Abastecimento", value: lastFillUp ? `${lastFillUp.liters.toFixed(1)} L` : '0 L', subValue: lastFillUp ? `R$ ${lastFillUp.cost.toFixed(2)}` : 'R$ 0,00' },
+        { title: "Último Abastecimento", value: `${lastFillUp.liters.toFixed(1)} L`, subValue: `R$ ${lastFillUp.cost.toFixed(2)}` },
         { title: "Distância Mensal", value: `${monthlyDistance.toLocaleString('pt-BR')} km` },
     ];
 
@@ -153,7 +153,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
-          Visão geral das suas despesas e consumo de combustível para o veículo: <strong>{primaryVehicle?.name || 'Nenhum'}</strong>
+          Visão geral das suas despesas e consumo de combustível para o veículo: <strong>{isLoading ? <Skeleton className="h-4 w-24 inline-block" /> : primaryVehicle?.name || 'Nenhum'}</strong>
         </p>
       </div>
 
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                      <p className="text-sm text-muted-foreground">Nenhuma atividade recente para exibir.</p>
                 </div>
             )}
-            {recentActivities.map((activity) => (
+            {!isLoading && recentActivities.map((activity) => (
               <div
                 key={activity.id}
                 className="flex items-center justify-between"
@@ -218,5 +218,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
