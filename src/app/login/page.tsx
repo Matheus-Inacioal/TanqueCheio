@@ -8,6 +8,7 @@ import * as z from 'zod';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +29,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { FuelPumpIcon, GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 
@@ -42,6 +43,7 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 export default function LoginPage() {
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { user, isLoading } = useUser();
 
@@ -70,7 +72,7 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error('Erro de login:', error);
       let description = 'Ocorreu um erro ao fazer login. Tente novamente.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         description = 'E-mail ou senha inválidos. Verifique suas credenciais.';
       }
       toast({
@@ -81,10 +83,23 @@ export default function LoginPage() {
     }
   };
 
+  const createFirestoreUser = async (user: any) => {
+    const userRef = doc(firestore, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+        await setDoc(userRef, {
+            id: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+        });
+    }
+  }
+
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      await createFirestoreUser(result.user);
       toast({
         title: 'Login com Google bem-sucedido!',
         description: 'Você será redirecionado para o dashboard.',
@@ -183,5 +198,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
