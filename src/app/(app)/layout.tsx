@@ -50,7 +50,7 @@ import type { Vehicle } from "@/lib/types";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
 
 const navItems = [
-  { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
+  { href: "/", icon: <LayoutDashboard />, label: "Dashboard" },
   { href: "/vehicles", icon: <Car />, label: "Veículos" },
   { href: "/reports", icon: <BarChart3 />, label: "Relatórios" },
   { href: "/settings", icon: <Settings />, label: "Configurações" },
@@ -67,7 +67,7 @@ function MobileSidebar() {
   return (
     <div className="flex h-full w-full flex-col">
       <SheetHeader className="p-4 border-b">
-        <Link href="/dashboard" className="flex items-center gap-2" onClick={handleLinkClick}>
+        <Link href="/" className="flex items-center gap-2" onClick={handleLinkClick}>
           <FuelPumpIcon className="size-8 text-primary" />
           <SheetTitle className="text-xl font-semibold">TanqueCheio</SheetTitle>
         </Link>
@@ -163,7 +163,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         className="border-r border-sidebar-border hidden md:flex"
       >
         <SidebarHeader className="p-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <FuelPumpIcon className="size-8 text-primary" />
             <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
               TanqueCheio
