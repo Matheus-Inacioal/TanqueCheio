@@ -64,7 +64,6 @@ export default function DashboardPage() {
             return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
         }).reverse(),
         consumptionData: [],
-        noData: true,
     };
 
     if (!fuelLogs || fuelLogs.length === 0) {
@@ -135,7 +134,7 @@ export default function DashboardPage() {
         }
     }).filter(Boolean);
 
-    return { summaryData, recentActivities, costData, consumptionData: consumptionData as { date: string; consumption: number }[], noData: false };
+    return { summaryData, recentActivities, costData, consumptionData: consumptionData as { date: string; consumption: number }[] };
 }, [fuelLogs, primaryVehicle]);
 
 
@@ -219,3 +218,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
