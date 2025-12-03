@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -123,12 +124,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
 
   React.useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
-
-  React.useEffect(() => {
     if (isMobile) {
       setOpen(false);
     } else {
@@ -144,7 +139,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  if (isUserLoading || !user) {
+  if (isUserLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="flex flex-col items-center gap-4">
@@ -153,6 +148,11 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     )
+  }
+
+  if (!user) {
+    router.push('/login');
+    return null; // Render nothing while redirecting
   }
 
   return (

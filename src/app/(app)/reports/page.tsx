@@ -56,15 +56,17 @@ export default function ReportsPage() {
     return month.charAt(0).toUpperCase() + month.slice(1);
   }, [currentDate]);
 
-  const { monthlyCostData, monthlyConsumptionData, allTimeConsumptionData, allTimeCostData, noData } = useMemo(() => {
+  const { monthlyCostData, monthlyConsumptionData, allTimeConsumptionData, allTimeCostData, noDataForMonth } = useMemo(() => {
+    const emptyState = {
+        monthlyCostData: [],
+        monthlyConsumptionData: [],
+        allTimeConsumptionData: [],
+        allTimeCostData: [],
+        noDataForMonth: true,
+    };
+    
     if (!fuelLogs || fuelLogs.length === 0) {
-        return {
-            monthlyCostData: [],
-            monthlyConsumptionData: [],
-            allTimeConsumptionData: [],
-            allTimeCostData: [],
-            noData: true
-        };
+        return emptyState;
     }
 
     const start = startOfMonth(currentDate);
@@ -119,7 +121,7 @@ export default function ReportsPage() {
         monthlyConsumptionData,
         allTimeConsumptionData,
         allTimeCostData,
-        noData: monthlyLogs.length === 0,
+        noDataForMonth: monthlyLogs.length === 0,
     };
   }, [fuelLogs, currentDate]);
   
@@ -157,12 +159,12 @@ export default function ReportsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2">
-                  {noData && !isLoading ? (
+                  {noDataForMonth && !isLoading ? (
                      <div className="col-span-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
                         <BarChart3 className="w-12 h-12 text-muted-foreground" />
-                        <h3 className="text-xl font-bold tracking-tight mt-4">Sem dados para exibir</h3>
+                        <h3 className="text-xl font-bold tracking-tight mt-4">Sem dados para este mês</h3>
                         <p className="text-sm text-muted-foreground">
-                        Comece a adicionar abastecimentos para ver seus relatórios.
+                        Adicione abastecimentos para ver seus relatórios mensais.
                         </p>
                     </div>
                   ) : (
@@ -181,10 +183,10 @@ export default function ReportsPage() {
                     <CardDescription>Acompanhe a eficiência do seu veículo ao longo do tempo.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {noData && !isLoading ? (
+                    {(!fuelLogs || fuelLogs.length === 0) && !isLoading ? (
                         <div className="col-span-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
                             <BarChart3 className="w-12 h-12 text-muted-foreground" />
-                            <h3 className="text-xl font-bold tracking-tight mt-4">Sem dados para exibir</h3>
+                            <h3 className="text-xl font-bold tracking-tight mt-4">Sem dados de consumo</h3>
                             <p className="text-sm text-muted-foreground">
                             O histórico de consumo aparecerá aqui.
                             </p>
@@ -202,10 +204,10 @@ export default function ReportsPage() {
                     <CardDescription>Veja a evolução dos seus gastos com combustível nos últimos 6 meses.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {noData && !isLoading ? (
+                    {(!fuelLogs || fuelLogs.length === 0) && !isLoading ? (
                         <div className="col-span-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
                             <BarChart3 className="w-12 h-12 text-muted-foreground" />
-                            <h3 className="text-xl font-bold tracking-tight mt-4">Sem dados para exibir</h3>
+                            <h3 className="text-xl font-bold tracking-tight mt-4">Sem dados de custos</h3>
                             <p className="text-sm text-muted-foreground">
                             O histórico de custos aparecerá aqui.
                             </p>
