@@ -1,9 +1,8 @@
-
 "use client";
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Car,
   LayoutDashboard,
@@ -45,6 +44,8 @@ import { AddFillUpDialog } from "@/components/fuel/add-fill-up-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { vehicles } from "@/lib/dummy-data";
 import { FuelPumpIcon } from "@/components/icons";
+import { FirebaseClientProvider, useUser } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const navItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
@@ -103,6 +104,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { openMobile, setOpenMobile, setOpen } = useSidebar();
   const isMobile = useIsMobile();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
 
   React.useEffect(() => {
     if (isMobile) {
@@ -119,6 +128,17 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     setKey(prev => prev + 1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <FuelPumpIcon className="size-12 text-primary animate-pulse" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </div>
+    )
+  }
 
   return (
       <>
@@ -166,12 +186,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-        <SheetContent side="left" className="w-[18rem] p-0 flex">
+        <SheetContent side="left" className="w-[18rem] p-0 flex sm:max-w-xs">
             <MobileSidebar />
         </SheetContent>
       </Sheet>
       <SidebarInset>
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
           <SidebarTrigger className="flex md:hidden" />
           <div className="flex w-full items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
@@ -213,8 +233,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <AppLayoutContent>{children}</AppLayoutContent>
-    </SidebarProvider>
+    <FirebaseClientProvider>
+      <SidebarProvider>
+        <AppLayoutContent>{children}</AppLayoutContent>
+      </SidebarProvider>
+    </FirebaseClientProvider>
   )
 }
+
+    

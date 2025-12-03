@@ -1,15 +1,16 @@
-
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Inter } from 'next/font/google';
 import { cn } from "@/lib/utils";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 const fontSans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
-})
+});
 
 export const metadata: Metadata = {
   title: "TanqueCheio",
@@ -27,17 +28,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={cn(
-          "min-h-screen bg-background font-body antialiased",
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
           fontSans.variable
-        )}>
+        )}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <main>{children}</main>
+          <FirebaseClientProvider>
+            <main>{children}</main>
+          </FirebaseClientProvider>
           <Toaster />
         </ThemeProvider>
       </body>

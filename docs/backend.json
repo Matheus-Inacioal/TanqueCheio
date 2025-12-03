@@ -161,15 +161,15 @@
       },
       "required": [
         "id",
-        "email",
-        "displayName"
+        "email"
       ]
     }
   },
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {
@@ -259,6 +259,4 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, support the required QAPs, and maintain data integrity. The primary strategy for achieving Authorization Independence is through denormalization. Specifically, the `userId` is embedded within the `Vehicle`, `FuelLog` and `MaintenanceAlert` documents, eliminating the need for security rules to perform `get()` operations to verify ownership based on parent document attributes.\n\n*   **Users Collection:** The `users` collection stores user profiles. It is path-based, ensuring that only the authenticated user can access their own data.\n*   **Vehicles Collection:** Vehicles are stored as subcollections under each user (`/users/{userId}/vehicles/{vehicleId}`). The `vehicleId` is included in `FuelLog` and `MaintenanceAlert`, ensuring authorization independence.\n*   **FuelLogs Collection:** Fuel logs are nested under vehicles (`/users/{userId}/vehicles/{vehicleId}/fuelLogs/{fuelLogId}`). This structure provides clear ownership and simplifies security rules.\n*   **MaintenanceAlerts Collection:** Maintenance alerts are also nested under vehicles (`/users/{userId}/vehicles/{vehicleId}/maintenanceAlerts/{maintenanceAlertId}`). Like fuel logs, this ensures clear ownership.\n\nThis structure enables secure `list` operations (QAPs) because each subcollection is homogeneous in its security posture. Rules can be applied at the collection level (e.g., only the authenticated user can list vehicles in their `/users/{userId}/vehicles` collection).  Denormalization of `userId` into child collections ensures each document can be validated independently of its parent via `request.auth.uid == resource.data.userId`."
-  }
-}
+    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, support the required QAPs, and maintain data integrity. The primary strategy for achieving Authorization Independence is through denormalization. Specifically, the `userId` is embedded within the `Vehicle`, `FuelLog` and `MaintenanceAlert` documents, eliminating the need for security rules to perform `get()` operations to verify ownership based on parent document attributes.\n\n*   **Users Collection:** The `users` collection stores user profiles. It is path-based, ensuring that only the authenticated user can access their own data.\n*   **Vehicles Collection:** Vehicles are stored as subcollections under each user (`/users/{userId}/vehicles/{vehicleId}`). The `vehicleId` is included in `FuelLog` and `MaintenanceAlert`, ensuring authorization independence.\n*   **FuelLogs Collection:** Fuel logs are nested under vehicles (`/users/{userId}/vehicles/{vehicleId}/fuelLogs/{fuelLogId}`). This structure provides clear ownership and simplifies security rules.\n*   **MaintenanceAlerts Collection:** Maintenance alerts are also nested under vehicles (`/users/{userId}/vehicles/{vehicleId}/maintenanceAlerts/{maintenanceAlertId}`). Like fuel logs, this ensures clear ownership.\n\nThis structure enables secure `list` operations (QAPs) because each subcollection is homogeneous in its security posture. Rules can be applied at the collection level (e.g., only the authenticated user can list vehicles in their `/users/{userId}/vehicles` collection).  Denormalization of `userId` into child collections ensures each
