@@ -40,7 +40,7 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] mx-4">
         <DialogHeader>
           <DialogTitle>Adicionar Abastecimento</DialogTitle>
           <DialogDescription>
