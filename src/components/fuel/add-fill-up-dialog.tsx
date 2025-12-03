@@ -33,6 +33,7 @@ import { Calendar } from "../ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useMemoFirebase } from "@/hooks/use-memo-firebase";
 
 const addFillUpSchema = z.object({
   vehicleId: z.string({ required_error: "Selecione um veículo." }),
@@ -52,11 +53,11 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const vehiclesQuery = React.useMemo(() => {
+  const vehiclesQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(firestore, `users/${user.uid}/vehicles`));
   }, [user, firestore]);
-  const { data: vehicles } = useCollection<Vehicle>(vehiclesQuery as any);
+  const { data: vehicles } = useCollection<Vehicle>(vehiclesQuery);
 
   const form = useForm<AddFillUpFormValues>({
     resolver: zodResolver(addFillUpSchema),
