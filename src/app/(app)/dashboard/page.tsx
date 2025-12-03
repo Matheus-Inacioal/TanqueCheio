@@ -55,7 +55,12 @@ export default function DashboardPage() {
             { icon: <Car className="text-primary" />, title: "Distância Mensal", value: "0 km" },
         ],
         recentActivities: [],
-        costData: [],
+        costData: Array.from({ length: 6 }).map((_, i) => {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            const monthName = d.toLocaleString('default', { month: 'short' });
+            return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
+        }).reverse(),
         consumptionData: [],
     };
 
