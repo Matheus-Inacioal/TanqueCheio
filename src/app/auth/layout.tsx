@@ -8,7 +8,7 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex min-h-screen flex-col items-center bg-background p-4 pt-24 sm:pt-32">
+        <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
             <div className="absolute top-8 flex items-center gap-2">
                  <Link href="/" className="flex items-center gap-2">
                     <FuelPumpIcon className="size-8 text-primary" />
