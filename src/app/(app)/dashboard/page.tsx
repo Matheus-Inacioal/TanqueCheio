@@ -20,7 +20,8 @@ import { collection, query, orderBy, limit } from "firebase/firestore";
 import type { FillUp, Vehicle } from "@/lib/types";
 import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDashboardData } from "@/lib/data-service";
+import { format, subMonths } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 
 export default function DashboardPage() {
@@ -47,8 +48,96 @@ export default function DashboardPage() {
 
   const { data: fuelLogs, isLoading: areFuelLogsLoading } = useCollection<FillUp>(fuelLogsQuery);
   const isLoading = areVehiclesLoading || areFuelLogsLoading;
+  
+  const { summaryData, recentActivities, costData, consumptionData } = useMemo(() => {
+        const emptyState = {
+            summaryData: [
+                { title: "Consumo Médio", value: "0.0", unit: "km/L" },
+                { title: "Gasto Mensal", value: "R$ 0,00" },
+                { title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
+                { title: "Distância Mensal", value: "0 km" },
+            ],
+            recentActivities: [],
+            costData: Array.from({ length: 6 }).map((_, i) => {
+                const d = subMonths(new Date(), i);
+                const monthName = format(d, 'MMM', { locale: ptBR });
+                return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
+            }).reverse(),
+            consumptionData: [],
+            noData: true,
+        };
 
-  const { summaryData, recentActivities, costData, consumptionData, noData } = useDashboardData(fuelLogs, primaryVehicle, isLoading);
+        if (!fuelLogs || fuelLogs.length === 0) {
+            return emptyState;
+        }
+
+        const vehicleName = primaryVehicle?.name || 'Veículo';
+        const lastFillUp = fuelLogs[0];
+
+        const recentActivities = fuelLogs.slice(0, 4).map((log) => ({
+            id: log.id,
+            vehicle: vehicleName,
+            description: `Abastecimento de ${log.liters.toFixed(1)}L`,
+            date: format(log.date.toDate(), "dd MMM yyyy", { locale: ptBR }),
+            type: "fill-up" as const,
+        }));
+
+        const now = new Date();
+        const currentMonthLogs = fuelLogs.filter(log => {
+            const logDate = log.date.toDate();
+            return logDate.getMonth() === now.getMonth() && logDate.getFullYear() === now.getFullYear();
+        });
+
+        const monthlyCost = currentMonthLogs.reduce((sum, log) => sum + log.cost, 0);
+
+        let monthlyDistance = 0;
+        if (currentMonthLogs.length > 1) {
+            const sorted = [...currentMonthLogs].sort((a, b) => a.odometer - b.odometer);
+            monthlyDistance = sorted[sorted.length - 1].odometer - sorted[0].odometer;
+        }
+
+        let avgConsumption = 0;
+        if (fuelLogs.length > 1) {
+            const sortedLogs = [...fuelLogs].sort((a, b) => a.odometer - b.odometer);
+            const totalDistance = sortedLogs[sortedLogs.length - 1].odometer - sortedLogs[0].odometer;
+            const totalLiters = sortedLogs.slice(1).reduce((acc, log) => acc + log.liters, 0);
+            if (totalLiters > 0) {
+                avgConsumption = totalDistance / totalLiters;
+            }
+        }
+
+        const summaryData = [
+            { title: "Consumo Médio", value: avgConsumption.toFixed(1), unit: "km/L" },
+            { title: "Gasto Mensal", value: `R$ ${monthlyCost.toFixed(2)}` },
+            { title: "Último Abastecimento", value: lastFillUp ? `${lastFillUp.liters.toFixed(1)} L` : '0 L', subValue: lastFillUp ? `R$ ${lastFillUp.cost.toFixed(2)}` : 'R$ 0,00' },
+            { title: "Distância Mensal", value: `${monthlyDistance.toLocaleString('pt-BR')} km` },
+        ];
+
+        const costData = Array.from({ length: 6 }).map((_, i) => {
+            const d = subMonths(new Date(), i);
+            const cost = fuelLogs.filter(log => {
+                const logDate = log.date.toDate();
+                return logDate.getMonth() === d.getMonth() && logDate.getFullYear() === d.getFullYear();
+            }).reduce((sum, log) => sum + log.cost, 0);
+            const monthName = format(d, 'MMM', { locale: ptBR });
+            return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost };
+        }).reverse();
+
+        const consumptionData = fuelLogs.slice(0, 10).reverse().map((log, index, arr) => {
+            if (index === 0) return null;
+            const prevLog = arr[index - 1];
+            if (!prevLog) return null;
+            const distance = log.odometer - prevLog.odometer;
+            const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
+            return {
+                date: format(log.date.toDate(), "dd/MM"),
+                consumption: parseFloat(consumption.toFixed(1))
+            }
+        }).filter(Boolean);
+
+        return { summaryData, recentActivities, costData, consumptionData: consumptionData as { date: string; consumption: number }[], noData: false };
+    }, [fuelLogs, primaryVehicle]);
+
 
   const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 

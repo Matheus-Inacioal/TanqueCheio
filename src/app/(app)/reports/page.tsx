@@ -14,13 +14,12 @@ import CostChart from "@/components/dashboard/cost-chart";
 import ConsumptionChart from "@/components/dashboard/consumption-chart";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react";
-import { format, subMonths, addMonths } from "date-fns";
+import { format, subMonths, addMonths, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useCollection, useFirestore, useUser } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import type { FillUp, Vehicle } from "@/lib/types";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
-import { useReportsData } from "@/lib/data-service";
 
 export default function ReportsPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -57,7 +56,72 @@ export default function ReportsPage() {
     return month.charAt(0).toUpperCase() + month.slice(1);
   }, [currentDate]);
 
-  const { monthlyCostData, monthlyConsumptionData, allTimeConsumptionData, allTimeCostData, noData } = useReportsData(fuelLogs, currentDate, isLoading);
+  const { monthlyCostData, monthlyConsumptionData, allTimeConsumptionData, allTimeCostData, noData } = useMemo(() => {
+    if (!fuelLogs || fuelLogs.length === 0) {
+        return {
+            monthlyCostData: [],
+            monthlyConsumptionData: [],
+            allTimeConsumptionData: [],
+            allTimeCostData: [],
+            noData: true
+        };
+    }
+
+    const start = startOfMonth(currentDate);
+    const end = endOfMonth(currentDate);
+    
+    const monthlyLogs = fuelLogs.filter(log => {
+        const logDate = log.date.toDate();
+        return logDate >= start && logDate <= end;
+    });
+
+    const monthlyCost = monthlyLogs.reduce((sum, log) => sum + log.cost, 0);
+    const monthName = format(currentDate, "MMM", { locale: ptBR });
+    const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    const monthlyCostData = [{ month: capitalizedMonth, cost: monthlyCost }];
+
+    const monthlyConsumptionData = monthlyLogs.slice().sort((a,b) => a.odometer - b.odometer).map((log, index, arr) => {
+        if (index === 0) return null;
+        const prevLog = arr[index - 1];
+        if (!prevLog) return null;
+        const distance = log.odometer - prevLog.odometer;
+        const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
+        return {
+            date: format(log.date.toDate(), "dd/MM"),
+            consumption: parseFloat(consumption.toFixed(1))
+        };
+    }).filter(Boolean) as { date: string; consumption: number; }[];
+
+    const allTimeConsumptionData = fuelLogs.slice().sort((a,b) => a.odometer - b.odometer).slice(-10).map((log, index, arr) => {
+        if (index === 0) return null;
+        const prevLog = arr[index - 1];
+        if (!prevLog) return null;
+        const distance = log.odometer - prevLog.odometer;
+        const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
+        return {
+            date: format(log.date.toDate(), "dd/MM"),
+            consumption: parseFloat(consumption.toFixed(1))
+        };
+    }).filter(Boolean) as { date: string; consumption: number; }[];
+
+    const allTimeCostData = Array.from({ length: 6 }).map((_, i) => {
+        const d = subMonths(new Date(), i);
+        const cost = fuelLogs.filter(log => {
+            const logDate = log.date.toDate();
+            return logDate.getMonth() === d.getMonth() && logDate.getFullYear() === d.getFullYear();
+        }).reduce((sum, log) => sum + log.cost, 0);
+        const monthName = format(d, 'MMM', { locale: ptBR });
+        return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost };
+    }).reverse();
+
+    return {
+        monthlyCostData,
+        monthlyConsumptionData,
+        allTimeConsumptionData,
+        allTimeCostData,
+        noData: monthlyLogs.length === 0,
+    };
+  }, [fuelLogs, currentDate]);
   
   return (
     <div className="flex flex-col gap-6">
