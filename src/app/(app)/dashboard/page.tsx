@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Car, Droplets, Gauge, Wallet } from "lucide-react";
@@ -16,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useUser, useFirestore, useCollection, type WithId } from "@/firebase";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
-import { collection, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 import type { FillUp, Vehicle } from "@/lib/types";
 import { useMemo } from "react";
 import { format } from "date-fns";
@@ -104,7 +103,6 @@ export default function DashboardPage() {
     if (fuelLogs.length > 1) {
         const sortedLogs = [...fuelLogs].sort((a,b) => a.odometer - b.odometer);
         const totalDistance = sortedLogs[sortedLogs.length - 1].odometer - sortedLogs[0].odometer;
-        // Exclude the first fill-up's liters from consumption calculation for accuracy
         const totalLiters = sortedLogs.slice(1).reduce((acc, log) => acc + log.liters, 0);
         if (totalLiters > 0) {
             avgConsumption = totalDistance / totalLiters;
@@ -241,5 +239,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
