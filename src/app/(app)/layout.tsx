@@ -44,11 +44,12 @@ import { UserNav } from "@/components/layout/user-nav";
 import { AddFillUpDialog } from "@/components/fuel/add-fill-up-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FuelPumpIcon } from "@/components/icons";
-import { useUser, useFirestore, useCollection } from "@/firebase";
+import { useUser, useFirestore, useCollection, useAuth } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { collection, query, where } from "firebase/firestore";
 import type { Vehicle } from "@/lib/types";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
+import { signInAnonymously } from "firebase/auth";
 
 const navItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
@@ -109,7 +110,15 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
   const router = useRouter();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      signInAnonymously(auth);
+    }
+  }, [isUserLoading, user, auth]);
+
 
   const vehiclesQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -139,7 +148,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  if (isUserLoading) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="flex flex-col items-center gap-4">
@@ -148,11 +157,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     )
-  }
-
-  if (!user) {
-    router.push('/login');
-    return null; // Render nothing while redirecting
   }
 
   return (
