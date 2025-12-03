@@ -47,7 +47,7 @@ function getMockData(): ProcessedData {
   const now = new Date();
 
   // Gera 10 abastecimentos fictícios nos últimos 3 meses
-  const mockFuelLogs: FillUp[] = Array.from({ length: 10 }).map((_, i) => {
+  const mockFuelLogs: WithId<FillUp>[] = Array.from({ length: 10 }).map((_, i) => {
     const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i * 8);
     const odometer = 50000 - i * 350;
     const liters = 35 + Math.random() * 10;
@@ -79,7 +79,7 @@ function getMockData(): ProcessedData {
     createdAt: { toDate: () => new Date() } as any,
   };
 
-  return processData(mockFuelLogs as WithId<FillUp>[], mockVehicle);
+  return processData(mockFuelLogs, mockVehicle);
 }
 
 
@@ -208,15 +208,16 @@ export function useReportsData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle
 
         const start = startOfMonth(currentDate);
         const end = endOfMonth(currentDate);
-        const capitalizedMonth = format(currentDate, "MMMM yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase());
-
+        
         const monthlyLogs = dataToProcess.filter(log => {
             const logDate = log.date.toDate();
             return logDate >= start && logDate <= end;
         });
 
         const monthlyCost = monthlyLogs.reduce((sum, log) => sum + log.cost, 0);
-        const monthlyCostData = [{ month: capitalizedMonth.split(' ')[0], cost: monthlyCost }];
+        const monthName = format(currentDate, "MMM", { locale: ptBR });
+        const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+        const monthlyCostData = [{ month: capitalizedMonth, cost: monthlyCost }];
 
         const monthlyConsumptionData = monthlyLogs.slice().sort((a,b) => a.odometer - b.odometer).map((log, index, arr) => {
             if (index === 0) return null;
@@ -255,7 +256,7 @@ export function useReportsData(fuelLogs: WithId<FillUp>[] | null, primaryVehicle
             monthlyConsumptionData,
             allTimeConsumptionData,
             allTimeCostData,
-            noData: false
+            noData: monthlyLogs.length === 0,
         };
 
     }, [fuelLogs, primaryVehicle, areFuelLogsLoading, currentDate]);
