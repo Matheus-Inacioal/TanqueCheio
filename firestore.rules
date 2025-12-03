@@ -1,0 +1,209 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-generated
+ * content (vehicles, fuel logs, maintenance alerts) is stored in subcollections under that
+ * specific user's document. This ensures that a user can only ever access data that
+ * belongs to them.
+ *
+ * Data Structure: The data is organized hierarchically, starting with a top-level `users`
+ * collection. Each user document at `/users/{userId}` acts as a root for their own data,
+ * containing nested subcollections for `vehicles`, which in turn contain `fuelLogs` and
+ * `maintenanceAlerts`. This path-based security model creates strong, logical data silos.
+ *
+ * Key Security Decisions:
+ * - No Public Data: All collections and documents are private. Users must be authenticated
+ *   to read or write any data.
+ * - Strict Ownership: A user can only access documents within their own data tree, identified
+ *   by `/users/{request.auth.uid}/...`.
+ * - No User Enumeration: Listing documents in the top-level `/users` collection is explicitly
+ *   disallowed to protect user privacy.
+ *
+ * Denormalization for Authorization: The security model relies on denormalization to remain
+ * performant and secure. The `userId` is stored on every `Vehicle` document, and is also
+ * expected on `FuelLog` and `MaintenanceAlert` documents. This allows rules to authorize a request
+ * by inspecting only the target document, avoiding slow and costly `get()` operations on parent
+ * documents.
+ *
+ * Structural Segregation: The design naturally segregates each user's data into its own
+ * document tree, which is the most secure and performant way to handle user-owned data. There
+ * is no mixing of public and private data within any collection.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------------------------------------------
+    // Helper Functions
+    // --------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Returns true if the authenticated user's UID matches the provided userId.
+     * This is the primary function for enforcing document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    /**
+     * Returns true if the user is the owner and the document already exists.
+     * Used for safe update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the User document being created has its `id` field set
+     * to match the document's path ID (which is the user's UID).
+     */
+    function hasValidUserDataForCreate(userId) {
+      let data = request.resource.data;
+      return data.id == userId;
+    }
+
+    /**
+     * Enforces immutability of the User document's `id` field during updates.
+     */
+    function isUserFieldImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * Validates that the Vehicle document being created has its `userId` field
+     * set to match the owning user's UID from the path.
+     */
+    function hasValidVehicleDataForCreate(userId) {
+      let data = request.resource.data;
+      return data.userId == userId;
+    }
+
+    /**
+     * Enforces immutability of the Vehicle's `userId` field during updates.
+     */
+    function areVehicleFieldsImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+    
+    /**
+     * Validates that a FuelLog document being created has its `vehicleId` and
+     * denormalized `userId` fields set to match the path parameters.
+     */
+    function hasValidFuelLogDataForCreate(userId, vehicleId) {
+      let data = request.resource.data;
+      // NOTE: `userId` is denormalized onto FuelLog for authorization independence,
+      // as per the security reasoning.
+      return data.vehicleId == vehicleId && data.userId == userId;
+    }
+
+    /**
+     * Enforces immutability of the FuelLog's relational keys (`userId`, `vehicleId`)
+     * during updates.
+     */
+    function areFuelLogFieldsImmutable() {
+      return request.resource.data.vehicleId == resource.data.vehicleId
+          && request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * Validates that a MaintenanceAlert document being created has its `vehicleId`
+     * and denormalized `userId` fields set to match the path parameters.
+     */
+    function hasValidMaintenanceAlertDataForCreate(userId, vehicleId) {
+      let data = request.resource.data;
+      // NOTE: `userId` is denormalized onto MaintenanceAlert for authorization
+      // independence, as per the security reasoning.
+      return data.vehicleId == vehicleId && data.userId == userId;
+    }
+
+    /**
+     * Enforces immutability of the MaintenanceAlert's relational keys
+     * (`userId`, `vehicleId`) during updates.
+     */
+    function areMaintenanceAlertFieldsImmutable() {
+      return request.resource.data.vehicleId == resource.data.vehicleId
+          && request.resource.data.userId == resource.data.userId;
+    }
+
+    // --------------------------------------------------------------------
+    // Collection Rules
+    // --------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents. A user can create their own profile,
+     *   and can only read or write their own document.
+     * @path /users/{userId}
+     * @allow (get) An authenticated user with UID 'user_abc' reads '/users/user_abc'.
+     * @allow (create) A new user with UID 'user_xyz' creates '/users/user_xyz'.
+     * @deny (list) No user can list the '/users' collection.
+     * @deny (get) A user with UID 'user_abc' tries to read '/users/user_xyz'.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && hasValidUserDataForCreate(userId);
+      allow update: if isExistingOwner(userId) && isUserFieldImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages vehicle documents owned by a user. Only the owning user
+     *   can perform any action on their vehicles.
+     * @path /users/{userId}/vehicles/{vehicleId}
+     * @allow (list) An authenticated user 'user_abc' lists their vehicles at '/users/user_abc/vehicles'.
+     * @allow (create) User 'user_abc' creates a new vehicle document in their own subcollection.
+     * @deny (get) User 'user_abc' tries to read a vehicle at '/users/user_xyz/vehicles/vehicle_123'.
+     * @deny (update) User 'user_abc' tries to update a vehicle owned by 'user_xyz'.
+     * @principle Enforces strict ownership for all documents within a user's subcollection.
+     */
+    match /users/{userId}/vehicles/{vehicleId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasValidVehicleDataForCreate(userId);
+      allow update: if isExistingOwner(userId) && areVehicleFieldsImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+    
+    /**
+     * @description Manages fuel log entries for a specific vehicle. Access is inherited from
+     *   the parent user, meaning only the user who owns the vehicle can manage its fuel logs.
+     * @path /users/{userId}/vehicles/{vehicleId}/fuelLogs/{fuelLogId}
+     * @allow (list) User 'user_abc' lists fuel logs for their own vehicle.
+     * @allow (create) User 'user_abc' creates a new fuel log for their own vehicle.
+     * @deny (list) User 'user_abc' tries to list fuel logs for a vehicle owned by 'user_xyz'.
+     * @deny (delete) User 'user_abc' tries to delete a fuel log belonging to 'user_xyz'.
+     * @principle Validates denormalized relational keys (`userId`, `vehicleId`) to maintain data integrity and security without extra reads.
+     */
+    match /users/{userId}/vehicles/{vehicleId}/fuelLogs/{fuelLogId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasValidFuelLogDataForCreate(userId, vehicleId);
+      allow update: if isExistingOwner(userId) && areFuelLogFieldsImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages maintenance alerts for a specific vehicle. Access is inherited from
+     *   the parent user, meaning only the user who owns the vehicle can manage its alerts.
+     * @path /users/{userId}/vehicles/{vehicleId}/maintenanceAlerts/{maintenanceAlertId}
+     * @allow (list) User 'user_abc' lists maintenance alerts for their own vehicle.
+     * @allow (create) User 'user_abc' creates a new maintenance alert for their own vehicle.
+     * @deny (get) User 'user_abc' tries to read a maintenance alert for a vehicle owned by 'user_xyz'.
+     * @deny (update) User 'user_abc' tries to update a maintenance alert belonging to 'user_xyz'.
+     * @principle Validates denormalized relational keys (`userId`, `vehicleId`) to maintain data integrity and security without extra reads.
+     */
+    match /users/{userId}/vehicles/{vehicleId}/maintenanceAlerts/{maintenanceAlertId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasValidMaintenanceAlertDataForCreate(userId, vehicleId);
+      allow update: if isExistingOwner(userId) && areMaintenanceAlertFieldsImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}

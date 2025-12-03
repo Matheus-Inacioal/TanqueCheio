@@ -1,0 +1,264 @@
+{
+  "entities": {
+    "Vehicle": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Vehicle",
+      "type": "object",
+      "description": "Represents a vehicle owned by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Vehicle entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Vehicle)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the vehicle (e.g., 'My Car')."
+        },
+        "licensePlate": {
+          "type": "string",
+          "description": "The license plate number of the vehicle."
+        },
+        "fuelType": {
+          "type": "string",
+          "description": "The type of fuel the vehicle uses (e.g., 'Gasoline', 'Diesel', 'Electric')."
+        },
+        "initialOdometer": {
+          "type": "number",
+          "description": "The initial odometer reading of the vehicle in kilometers."
+        },
+        "isPrimary": {
+          "type": "boolean",
+          "description": "Indicates whether this vehicle is the user's primary vehicle."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "fuelType",
+        "initialOdometer",
+        "isPrimary"
+      ]
+    },
+    "FuelLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FuelLog",
+      "type": "object",
+      "description": "Represents a fuel fill-up record for a vehicle.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the FuelLog entity."
+        },
+        "vehicleId": {
+          "type": "string",
+          "description": "Reference to Vehicle. (Relationship: Vehicle 1:N FuelLog)"
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the fuel fill-up.",
+          "format": "date-time"
+        },
+        "gasStation": {
+          "type": "string",
+          "description": "The name of the gas station where the fuel was purchased."
+        },
+        "odometer": {
+          "type": "number",
+          "description": "The odometer reading at the time of the fuel fill-up."
+        },
+        "cost": {
+          "type": "number",
+          "description": "The total cost of the fuel fill-up."
+        },
+        "pricePerLiter": {
+          "type": "number",
+          "description": "The price per liter of the fuel."
+        },
+        "liters": {
+          "type": "number",
+          "description": "The number of liters of fuel purchased."
+        },
+        "fuelType": {
+          "type": "string",
+          "description": "The type of fuel purchased (e.g., 'Gasoline', 'Diesel')."
+        }
+      },
+      "required": [
+        "id",
+        "vehicleId",
+        "date",
+        "odometer",
+        "cost",
+        "pricePerLiter",
+        "liters",
+        "fuelType"
+      ]
+    },
+    "MaintenanceAlert": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MaintenanceAlert",
+      "type": "object",
+      "description": "Represents a maintenance alert for a vehicle.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the MaintenanceAlert entity."
+        },
+        "vehicleId": {
+          "type": "string",
+          "description": "Reference to Vehicle. (Relationship: Vehicle 1:N MaintenanceAlert)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the maintenance task (e.g., 'Oil Change')."
+        },
+        "intervalKm": {
+          "type": "number",
+          "description": "The mileage interval at which the maintenance task should be performed."
+        },
+        "lastPerformedOdometer": {
+          "type": "number",
+          "description": "The odometer reading when the maintenance task was last performed."
+        },
+        "nextMaintenanceKm": {
+          "type": "number",
+          "description": "The odometer reading at which the maintenance task should be performed next."
+        }
+      },
+      "required": [
+        "id",
+        "vehicleId",
+        "description",
+        "intervalKm",
+        "lastPerformedOdometer",
+        "nextMaintenanceKm"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The display name of the user."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "displayName"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Only the authenticated user can access their profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user.  Must match the authenticated user's UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/vehicles/{vehicleId}",
+        "definition": {
+          "entityName": "Vehicle",
+          "schema": {
+            "$ref": "#/backend/entities/Vehicle"
+          },
+          "description": "Stores vehicle data for a specific user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user. Must match the authenticated user's UID."
+            },
+            {
+              "name": "vehicleId",
+              "description": "The unique identifier of the vehicle."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/vehicles/{vehicleId}/fuelLogs/{fuelLogId}",
+        "definition": {
+          "entityName": "FuelLog",
+          "schema": {
+            "$ref": "#/backend/entities/FuelLog"
+          },
+          "description": "Stores fuel log entries for a specific vehicle. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user.  Must match the authenticated user's UID."
+            },
+            {
+              "name": "vehicleId",
+              "description": "The unique identifier of the vehicle."
+            },
+            {
+              "name": "fuelLogId",
+              "description": "The unique identifier of the fuel log entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/vehicles/{vehicleId}/maintenanceAlerts/{maintenanceAlertId}",
+        "definition": {
+          "entityName": "MaintenanceAlert",
+          "schema": {
+            "$ref": "#/backend/entities/MaintenanceAlert"
+          },
+          "description": "Stores maintenance alerts for a specific vehicle. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user.  Must match the authenticated user's UID."
+            },
+            {
+              "name": "vehicleId",
+              "description": "The unique identifier of the vehicle."
+            },
+            {
+              "name": "maintenanceAlertId",
+              "description": "The unique identifier of the maintenance alert."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, support the required QAPs, and maintain data integrity. The primary strategy for achieving Authorization Independence is through denormalization. Specifically, the `userId` is embedded within the `Vehicle`, `FuelLog` and `MaintenanceAlert` documents, eliminating the need for security rules to perform `get()` operations to verify ownership based on parent document attributes.\n\n*   **Users Collection:** The `users` collection stores user profiles. It is path-based, ensuring that only the authenticated user can access their own data.\n*   **Vehicles Collection:** Vehicles are stored as subcollections under each user (`/users/{userId}/vehicles/{vehicleId}`). The `vehicleId` is included in `FuelLog` and `MaintenanceAlert`, ensuring authorization independence.\n*   **FuelLogs Collection:** Fuel logs are nested under vehicles (`/users/{userId}/vehicles/{vehicleId}/fuelLogs/{fuelLogId}`). This structure provides clear ownership and simplifies security rules.\n*   **MaintenanceAlerts Collection:** Maintenance alerts are also nested under vehicles (`/users/{userId}/vehicles/{vehicleId}/maintenanceAlerts/{maintenanceAlertId}`). Like fuel logs, this ensures clear ownership.\n\nThis structure enables secure `list` operations (QAPs) because each subcollection is homogeneous in its security posture. Rules can be applied at the collection level (e.g., only the authenticated user can list vehicles in their `/users/{userId}/vehicles` collection).  Denormalization of `userId` into child collections ensures each document can be validated independently of its parent via `request.auth.uid == resource.data.userId`."
+  }
+}
