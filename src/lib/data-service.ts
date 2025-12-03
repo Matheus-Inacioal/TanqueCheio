@@ -9,7 +9,6 @@ import { ptBR } from 'date-fns/locale';
 
 // Tipos para os dados processados
 type SummaryData = {
-  icon: JSX.Element;
   title: string;
   value: string;
   unit?: string;
@@ -70,7 +69,7 @@ function getMockData(primaryVehicle: WithId<Vehicle> | undefined): ProcessedData
     };
   });
 
-  return processData(mockFuelLogs, primaryVehicle);
+  return processData(mockFuelLogs as WithId<FillUp>[], primaryVehicle);
 }
 
 
@@ -86,10 +85,10 @@ function processData(fuelLogs: WithId<FillUp>[], primaryVehicle: WithId<Vehicle>
     if (!fuelLogs || fuelLogs.length === 0) {
         return {
             summaryData: [
-                { icon: {} as any, title: "Consumo Médio", value: "0.0", unit: "km/L" },
-                { icon: {} as any, title: "Gasto Mensal", value: "R$ 0,00" },
-                { icon: {} as any, title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
-                { icon: {} as any, title: "Distância Mensal", value: "0 km" },
+                { title: "Consumo Médio", value: "0.0", unit: "km/L" },
+                { title: "Gasto Mensal", value: "R$ 0,00" },
+                { title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
+                { title: "Distância Mensal", value: "0 km" },
             ],
             recentActivities: [],
             costData: Array.from({ length: 6 }).map((_, i) => {
@@ -136,10 +135,10 @@ function processData(fuelLogs: WithId<FillUp>[], primaryVehicle: WithId<Vehicle>
     }
 
     const summaryData = [
-      { icon: {} as any, title: "Consumo Médio", value: avgConsumption.toFixed(1), unit: "km/L" },
-      { icon: {} as any, title: "Gasto Mensal", value: `R$ ${monthlyCost.toFixed(2)}`},
-      { icon: {} as any, title: "Último Abastecimento", value: `${lastFillUp.liters.toFixed(1)} L`, subValue: `R$ ${lastFillUp.cost.toFixed(2)}`},
-      { icon: {} as any, title: "Distância Mensal", value: `${monthlyDistance.toLocaleString('pt-BR')} km`},
+      { title: "Consumo Médio", value: avgConsumption.toFixed(1), unit: "km/L" },
+      { title: "Gasto Mensal", value: `R$ ${monthlyCost.toFixed(2)}`},
+      { title: "Último Abastecimento", value: `${lastFillUp.liters.toFixed(1)} L`, subValue: `R$ ${lastFillUp.cost.toFixed(2)}`},
+      { title: "Distância Mensal", value: `${monthlyDistance.toLocaleString('pt-BR')} km`},
     ];
 
     const costData = Array.from({ length: 6 }).map((_, i) => {
