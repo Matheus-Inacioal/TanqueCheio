@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemoFirebase } from '@/firebase/hooks/use-memo-firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useCollection, useFirestore, useUser, type WithId } from '@/firebase';
 import type { Vehicle } from '@/lib/types';
@@ -11,7 +11,7 @@ export function VehicleList() {
   const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  const vehiclesQuery = useMemo(() => {
+  const vehiclesQuery = useMemoFirebase(() => {
     if (!user) return null;
     const ref = collection(firestore, `users/${user.uid}/vehicles`);
     return query(ref, orderBy('createdAt', 'desc'));
