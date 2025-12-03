@@ -154,7 +154,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <FuelPumpIcon className="size-12 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Bem-vindo de volta!</CardTitle>
+          <CardTitle className="text-2xl">TanqueCheio</CardTitle>
           <CardDescription>
             Faça login para acessar seu painel de controle.
           </CardDescription>
