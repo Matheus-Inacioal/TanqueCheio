@@ -67,9 +67,9 @@ export default function SignupPage() {
 
       toast({
         title: 'Conta criada com sucesso!',
-        description: 'Você será redirecionado para o dashboard.',
+        description: 'Você será redirecionado.',
       });
-      router.push('/dashboard');
+      router.push('/');
     } catch (error: any) {
       console.error(error);
       let description = "Ocorreu um erro ao criar a conta.";
@@ -162,4 +162,8 @@ export default function SignupPage() {
                     </Link>
                 </p>
 
-            </Card
+            </CardContent>
+        </Card>
+    </div>
+  );
+}

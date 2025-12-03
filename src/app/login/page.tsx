@@ -61,9 +61,9 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({
         title: 'Login realizado com sucesso!',
-        description: 'Redirecionando para o dashboard...',
+        description: 'Redirecionando...',
       });
-      router.push('/dashboard');
+      router.push('/');
     } catch (error: any) {
       console.error(error);
       let description = 'Ocorreu um erro ao fazer login.';
@@ -84,9 +84,9 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       toast({
         title: 'Login com Google realizado com sucesso!',
-        description: 'Redirecionando para o dashboard...',
+        description: 'Redirecionando...',
       });
-      router.push('/dashboard');
+      router.push('/');
     } catch (error) {
       console.error(error);
       toast({
