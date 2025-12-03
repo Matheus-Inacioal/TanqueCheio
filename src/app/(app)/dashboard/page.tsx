@@ -19,9 +19,8 @@ import { useMemoFirebase } from "@/hooks/use-memo-firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import type { FillUp, Vehicle } from "@/lib/types";
 import { useMemo } from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardData } from "@/lib/data-service";
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -47,129 +46,19 @@ export default function DashboardPage() {
 
   const { data: fuelLogs, isLoading: areFuelLogsLoading } = useCollection<FillUp>(fuelLogsQuery);
 
-  const { summaryData, recentActivities, costData, consumptionData } = useMemo(() => {
-    const emptyState = {
-        summaryData: [
-            { icon: <Gauge className="text-primary" />, title: "Consumo Médio", value: "0.0", unit: "km/L" },
-            { icon: <Wallet className="text-primary" />, title: "Gasto Mensal", value: "R$ 0,00" },
-            { icon: <Droplets className="text-primary" />, title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
-            { icon: <Car className="text-primary" />, title: "Distância Mensal", value: "0 km" },
-        ],
-        recentActivities: [],
-        costData: Array.from({ length: 6 }).map((_, i) => {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            const monthName = d.toLocaleString('pt-BR', { month: 'short' });
-            return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
-        }).reverse(),
-        consumptionData: [],
-    };
-
-    if (!fuelLogs || fuelLogs.length === 0) {
-        return emptyState;
-    }
-
-    // From here on, we know fuelLogs has at least one item.
-    const lastFillUp = fuelLogs[0];
-
-    // Recent Activities
-    const recentActivities = fuelLogs.slice(0, 4).map((log: WithId<FillUp>) => ({
-      id: log.id,
-      vehicle: primaryVehicle?.name || 'Veículo',
-      description: `Abastecimento de ${log.liters.toFixed(1)}L`,
-      date: format(log.date.toDate(), "dd MMM yyyy", { locale: ptBR }),
-      type: "fill-up",
-    }));
-
-    // Summary Cards Calculations
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    const monthlyLogs = fuelLogs.filter(log => {
-      const logDate = log.date.toDate();
-      return logDate.getMonth() === currentMonth && logDate.getFullYear() === currentYear;
-    });
-
-    const monthlyCost = monthlyLogs.reduce((sum, log) => sum + log.cost, 0);
-    
-    let monthlyDistance = 0;
-    if (monthlyLogs.length > 1) {
-      const firstOdometerThisMonth = Math.min(...monthlyLogs.map(l => l.odometer));
-      const lastOdometerThisMonth = Math.max(...monthlyLogs.map(l => l.odometer));
-      monthlyDistance = lastOdometerThisMonth - firstOdometerThisMonth;
-    }
-
-    // Average consumption
-    let avgConsumption = 0;
-    if (fuelLogs.length > 1) {
-        const sortedLogs = [...fuelLogs].sort((a,b) => a.odometer - b.odometer);
-        const totalDistance = sortedLogs[sortedLogs.length - 1].odometer - sortedLogs[0].odometer;
-        const totalLiters = sortedLogs.slice(1).reduce((acc, log) => acc + log.liters, 0);
-        if (totalLiters > 0) {
-            avgConsumption = totalDistance / totalLiters;
-        }
-    }
-
-
-    const summaryData = [
-      {
-        icon: <Gauge className="text-primary" />,
-        title: "Consumo Médio",
-        value: avgConsumption.toFixed(1),
-        unit: "km/L",
-      },
-      {
-        icon: <Wallet className="text-primary" />,
-        title: "Gasto Mensal",
-        value: `R$ ${monthlyCost.toFixed(2)}`,
-      },
-      {
-        icon: <Droplets className="text-primary" />,
-        title: "Último Abastecimento",
-        value: `${lastFillUp.liters.toFixed(1)} L`,
-        subValue: `R$ ${lastFillUp.cost.toFixed(2)}`,
-      },
-      {
-        icon: <Car className="text-primary" />,
-        title: "Distância Mensal",
-        value: `${monthlyDistance.toLocaleString('pt-BR')} km`,
-      },
-    ];
-
-    // Chart Data
-    const costData = Array.from({ length: 6 }).map((_, i) => {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        const monthName = d.toLocaleString('pt-BR', { month: 'short' });
-        const year = d.getFullYear();
-        const cost = fuelLogs.filter(log => {
-            const logDate = log.date.toDate();
-            return logDate.getMonth() === d.getMonth() && logDate.getFullYear() === year;
-        }).reduce((sum, log) => sum + log.cost, 0);
-        return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost };
-    }).reverse();
-
-    const consumptionData = fuelLogs.slice(0, 10).reverse().map((log, index, arr) => {
-        if (index === 0) return null;
-        const prevLog = arr[index - 1];
-        if(!prevLog) return null;
-        const distance = log.odometer - prevLog.odometer;
-        const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
-        return {
-            date: format(log.date.toDate(), "dd/MM"),
-            consumption: parseFloat(consumption.toFixed(1))
-        }
-    }).filter(Boolean);
-
-
-    return { summaryData, recentActivities, costData, consumptionData: consumptionData as any };
-
-  }, [fuelLogs, primaryVehicle]);
+  const { summaryData, recentActivities, costData, consumptionData } = useDashboardData(fuelLogs, primaryVehicle, areFuelLogsLoading);
 
   const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 
   const isLoading = areVehiclesLoading || areFuelLogsLoading;
+
+  const finalSummaryData = useMemo(() => [
+    { icon: <Gauge className="text-primary" />, ...summaryData[0] },
+    { icon: <Wallet className="text-primary" />, ...summaryData[1] },
+    { icon: <Droplets className="text-primary" />, ...summaryData[2] },
+    { icon: <Car className="text-primary" />, ...summaryData[3] },
+  ], [summaryData]);
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -181,7 +70,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {summaryData.map((data, index) => (
+        {finalSummaryData.map((data, index) => (
           <SummaryCard key={index} {...data} isLoading={isLoading} />
         ))}
       </div>
@@ -241,5 +130,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

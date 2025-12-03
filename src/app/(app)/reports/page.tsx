@@ -14,12 +14,13 @@ import CostChart from "@/components/dashboard/cost-chart";
 import ConsumptionChart from "@/components/dashboard/consumption-chart";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react";
-import { format, subMonths, addMonths, startOfMonth, endOfMonth } from "date-fns";
+import { format, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useCollection, useFirestore, useUser, type WithId } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import type { FillUp, Vehicle } from "@/lib/types";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
+import { useReportsData } from "@/lib/data-service";
 
 export default function ReportsPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -50,81 +51,15 @@ export default function ReportsPage() {
     setCurrentDate(addMonths(currentDate, 1));
   };
 
-  const formattedMonth = format(currentDate, "MMMM yyyy", { locale: ptBR });
-  const capitalizedMonth = formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1);
+  const formattedMonth = useMemo(() => {
+    const month = format(currentDate, "MMMM yyyy", { locale: ptBR });
+    return month.charAt(0).toUpperCase() + month.slice(1);
+  }, [currentDate]);
 
-  const { monthlyCostData, monthlyConsumptionData, allTimeConsumptionData, allTimeCostData } = useMemo(() => {
-    const emptyData = { 
-        monthlyCostData: [], 
-        monthlyConsumptionData: [], 
-        allTimeConsumptionData: [], 
-        allTimeCostData: Array.from({ length: 6 }).map((_, i) => {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            const monthName = d.toLocaleString('pt-BR', { month: 'short' });
-            return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
-        }).reverse()
-    };
-
-    if (!fuelLogs || fuelLogs.length === 0) {
-      return emptyData;
-    }
-
-    const start = startOfMonth(currentDate);
-    const end = endOfMonth(currentDate);
-
-    const monthlyLogs = fuelLogs.filter(log => {
-      const logDate = log.date.toDate();
-      return logDate >= start && logDate <= end;
-    });
-
-    const monthlyCostData = [{ month: capitalizedMonth, cost: monthlyLogs.reduce((sum, log) => sum + log.cost, 0) }];
-    
-    const monthlyConsumptionData = monthlyLogs.slice().reverse().map((log, index, arr) => {
-        if (index === 0) return null;
-        const prevLog = arr[index-1];
-        if(!prevLog) return null;
-        const distance = log.odometer - prevLog.odometer;
-        const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
-        return {
-            date: format(log.date.toDate(), "dd/MM"),
-            consumption: parseFloat(consumption.toFixed(1))
-        }
-    }).filter(Boolean) as { date: string; consumption: number }[];
-
-
-    const allTimeConsumptionData = fuelLogs.slice(0, 10).reverse().map((log, index, arr) => {
-        if (index === 0) return null;
-        const prevLog = arr[index - 1];
-        if(!prevLog) return null;
-        const distance = log.odometer - prevLog.odometer;
-        const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
-        return {
-            date: format(log.date.toDate(), "dd/MM"),
-            consumption: parseFloat(consumption.toFixed(1))
-        }
-    }).filter(Boolean) as { date: string; consumption: number }[];
-
-    const allTimeCostData = Array.from({ length: 6 }).map((_, i) => {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        const monthName = d.toLocaleString('pt-BR', { month: 'short' });
-        const year = d.getFullYear();
-        const cost = fuelLogs.filter(log => {
-            const logDate = log.date.toDate();
-            return logDate.getMonth() === d.getMonth() && logDate.getFullYear() === year;
-        }).reduce((sum, log) => sum + log.cost, 0);
-        return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost };
-    }).reverse();
-
-
-    return { monthlyCostData, monthlyConsumptionData, allTimeConsumptionData, allTimeCostData };
-  }, [currentDate, fuelLogs, capitalizedMonth]);
+  const { monthlyCostData, monthlyConsumptionData, allTimeConsumptionData, allTimeCostData, noData } = useReportsData(fuelLogs, primaryVehicle, areFuelLogsLoading, currentDate);
   
   const isLoading = areVehiclesLoading || areFuelLogsLoading;
-
-  const noData = !isLoading && (!fuelLogs || fuelLogs.length === 0);
-
+  
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -145,7 +80,7 @@ export default function ReportsPage() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle>Resumo de {capitalizedMonth}</CardTitle>
+                        <CardTitle>Resumo de {formattedMonth}</CardTitle>
                         <CardDescription>Um resumo do seu desempenho e gastos neste mês.</CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
@@ -159,7 +94,7 @@ export default function ReportsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2">
-                  {noData ? (
+                  {noData && !isLoading ? (
                      <div className="col-span-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
                         <BarChart3 className="w-12 h-12 text-muted-foreground" />
                         <h3 className="text-xl font-bold tracking-tight mt-4">Sem dados para exibir</h3>
@@ -183,7 +118,7 @@ export default function ReportsPage() {
                     <CardDescription>Acompanhe a eficiência do seu veículo ao longo do tempo.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {noData ? (
+                    {noData && !isLoading ? (
                         <div className="col-span-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
                             <BarChart3 className="w-12 h-12 text-muted-foreground" />
                             <h3 className="text-xl font-bold tracking-tight mt-4">Sem dados para exibir</h3>
@@ -204,7 +139,7 @@ export default function ReportsPage() {
                     <CardDescription>Veja a evolução dos seus gastos com combustível nos últimos 6 meses.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {noData ? (
+                    {noData && !isLoading ? (
                         <div className="col-span-2 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
                             <BarChart3 className="w-12 h-12 text-muted-foreground" />
                             <h3 className="text-xl font-bold tracking-tight mt-4">Sem dados para exibir</h3>
