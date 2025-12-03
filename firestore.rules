@@ -1,157 +1,200 @@
 /**
- * Core Philosophy: This ruleset enforces a strict user-ownership model. All data
- * is considered private and can only be accessed by the authenticated user who
- * owns it. There is no public or shared data.
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All data is
+ * considered private and is nested within a user-specific document tree. Access to any
+ * piece of data is granted only to the authenticated user who owns that data tree.
  *
- * Data Structure: The data is organized hierarchically, with all user-specific
- * information nested under the `/users/{userId}` path. This structure includes
- * user profiles, their vehicles, and detailed logs for each vehicle, such as
- * fuel fill-ups and maintenance alerts. This path-based nesting is the primary
- * mechanism for enforcing security.
+ * Data Structure: The data is organized hierarchically, starting with a top-level
+ * `/users` collection. Each user's data, including their vehicles, fuel logs, and
+ * maintenance alerts, is stored in subcollections under their unique document path
+ * (e.g., /users/{userId}/vehicles/{vehicleId}/...). This structure ensures that
+ * ownership is implicitly defined by the document's path.
  *
  * Key Security Decisions:
- * - Default Deny: All access is denied by default. Rules explicitly grant permissions.
- * - Authentication Required: No anonymous access is permitted for any operation.
- * - No User Enumeration: Listing the top-level `/users` collection is disallowed
- *   to protect user privacy.
- * - Path-Based Ownership: Authorization is determined by matching the `{userId}`
- *   wildcard in the document path with the authenticated user's UID. This avoids
- *   slow and costly `get()` calls to other documents for authorization checks.
+ * - Strict Ownership: All operations (read, write, delete) are restricted to the
+ *   user whose UID matches the {userId} in the path. There is no public or shared data.
+ * - No User Listing: Listing documents in the top-level `/users` collection is
+ *   explicitly disallowed to prevent user data enumeration and protect privacy.
+ * - Self-Creation: A user is permitted to create their own user document
+ *   (e.g., /users/{auth.uid}) upon sign-up, but cannot create documents for others.
+ * - Path-Based Security: The rules leverage the document path for authorization, which
+ *   is highly performant as it avoids extra database reads (`get()` calls) to
+ *   check for ownership.
  *
- * Denormalization for Authorization: The hierarchical structure itself is a form
- * of denormalization for authorization. By placing a user's vehicles under their
- * unique path (`/users/{userId}/vehicles/{vehicleId}`), the ownership is implicit
- * in the path, making security rules simple, fast, and secure. Furthermore, on
- * document creation, we enforce that internal ID fields (like `User.id` or
- * `Vehicle.userId`) match the IDs in the path to ensure data integrity.
+ * Denormalization for Authorization: This ruleset relies on path-based security, which
+ * is a form of structural denormalization. Ownership is determined by the document's
+ * location in the database, not just by a field inside the document. For subcollections,
+ * relational integrity is enforced by validating that internal IDs (e.g., `userId` or
+ * `vehicleId`) match the corresponding IDs in the path upon creation.
  *
- * Structural Segregation: The entire data model uses structural segregation.
- * All data for a single user is contained within their own document tree, ensuring
- * that all documents within a given subcollection share the same security context
- * (owner-only access). This prevents security bugs and improves query performance.
+ * Structural Segregation: The entire data model is based on segregation. Each user's
+ * data is completely isolated within its own document tree. This makes security simple,
+ * performant, and prevents any possibility of data leakage between users.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions to improve readability and reuse
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // Checks if the requesting user is the owner of the document based on the path.
+    /**
+     * Checks if the authenticated user's UID matches the provided userId.
+     * This is the primary function for enforcing document ownership.
+     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // For update/delete, ensures the user is the owner AND the document already exists.
+    /**
+     * Checks for ownership on an existing document. Used for update/delete.
+     * Prevents operations on documents that do not exist.
+     */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
-    // Validates that the User document being created has an 'id' matching the path.
-    function hasValidUserData(userId) {
+    /**
+     * On create, validates that the new User document's `id` field
+     * matches the `userId` from the document path.
+     */
+    function isValidUserCreate(userId) {
       return request.resource.data.id == userId;
     }
 
-    // Ensures the User 'id' cannot be changed after creation.
-    function isUserDataImmutable() {
+    /**
+     * On update, ensures the User document's `id` field is immutable.
+     */
+    function isImmutableUser() {
       return request.resource.data.id == resource.data.id;
     }
-
-    // Validates that the Vehicle document being created has IDs matching the path.
-    function hasValidVehicleData(userId, vehicleId) {
-      return request.resource.data.userId == userId && request.resource.data.id == vehicleId;
+    
+    /**
+     * On create, validates that the new Vehicle document's `userId` field
+     * matches the `userId` from the document path.
+     */
+    function isValidVehicleCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+    
+    /**
+     * On update, ensures the Vehicle document's `userId` is immutable.
+     */
+    function isImmutableVehicle() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+    
+    /**
+     * On create, validates that the new FuelLog document's `vehicleId`
+     * field matches the `vehicleId` from the document path.
+     */
+    function isValidFuelLogCreate(vehicleId) {
+      return request.resource.data.vehicleId == vehicleId;
+    }
+    
+    /**
+     * On update, ensures the FuelLog document's `vehicleId` is immutable.
+     */
+    function isImmutableFuelLog() {
+      return request.resource.data.vehicleId == resource.data.vehicleId;
+    }
+    
+    /**
+     * On create, validates that the new MaintenanceAlert's `vehicleId`
+     * field matches the `vehicleId` from the document path.
+     */
+    function isValidMaintenanceAlertCreate(vehicleId) {
+      return request.resource.data.vehicleId == vehicleId;
+    }
+    
+    /**
+     * On update, ensures the MaintenanceAlert's `vehicleId` is immutable.
+     */
+    function isImmutableMaintenanceAlert() {
+      return request.resource.data.vehicleId == resource.data.vehicleId;
     }
 
-    // Ensures the Vehicle's ownership and ID fields cannot be changed.
-    function isVehicleDataImmutable() {
-      return request.resource.data.userId == resource.data.userId && request.resource.data.id == resource.data.id;
-    }
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
 
-    // Validates that the FuelLog document being created has IDs matching the path.
-    function hasValidFuelLogData(vehicleId, fuelLogId) {
-      return request.resource.data.vehicleId == vehicleId && request.resource.data.id == fuelLogId;
-    }
+    /**
+     * @description Manages user profile documents.
+     * @path /users/{userId}
+     * @allow (create) A new user with auth.uid 'user123' creates their own profile at /users/user123.
+     * @deny (list) An authenticated user tries to list all documents in the /users collection.
+     * @principle Restricts access to a user's own profile and allows self-creation of that profile.
+     */
+    match /users/{userId} {
+      // Reads: Only the owner can get their own user document. Listing all users is forbidden.
+      allow get: if isOwner(userId);
+      allow list: if false;
 
-    // Ensures the FuelLog's parent vehicle and ID fields cannot be changed.
-    function isFuelLogDataImmutable() {
-      return request.resource.data.vehicleId == resource.data.vehicleId && request.resource.data.id == resource.data.id;
-    }
-
-    // Validates that the MaintenanceAlert document being created has IDs matching the path.
-    function hasValidMaintenanceAlertData(vehicleId, maintenanceAlertId) {
-      return request.resource.data.vehicleId == vehicleId && request.resource.data.id == maintenanceAlertId;
-    }
-
-    // Ensures the MaintenanceAlert's parent vehicle and ID fields cannot be changed.
-    function isMaintenanceAlertDataImmutable() {
-      return request.resource.data.vehicleId == resource.data.vehicleId && request.resource.data.id == resource.data.id;
+      // Writes: A user can create their own document, update it, and delete it.
+      allow create: if isOwner(userId) && isValidUserCreate(userId);
+      allow update: if isExistingOwner(userId) && isImmutableUser();
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to a user's own profile document.
-     * @path /users/{userId}
-     * @allow A signed-in user (auth.uid=`user123`) creating their own user document (at `/users/user123`). (create)
-     * @deny An anonymous user trying to read a user profile. (get)
-     * @deny A signed-in user (auth.uid=`user456`) trying to delete another user's profile (`/users/user123`). (delete)
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     * @description Manages vehicle documents owned by a specific user.
+     * @path /users/{userId}/vehicles/{vehicleId}
+     * @allow (get) A user with auth.uid 'user123' reads their own vehicle at /users/user123/vehicles/car456.
+     * @deny (update) A user with auth.uid 'userABC' tries to update a vehicle at /users/user123/vehicles/car456.
+     * @principle Enforces strict ownership for all vehicle data, nested under the user's path.
      */
-    match /users/{userId} {
+    match /users/{userId}/vehicles/{vehicleId} {
+      // Reads: Only the owner can get or list their own vehicles.
       allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && hasValidUserData(userId);
-      allow update: if isExistingOwner(userId) && isUserDataImmutable();
+      allow list: if isOwner(userId);
+
+      // Writes: Only the owner can create, update, or delete their own vehicles.
+      allow create: if isOwner(userId) && isValidVehicleCreate(userId);
+      allow update: if isExistingOwner(userId) && isImmutableVehicle();
       allow delete: if isExistingOwner(userId);
+    }
 
-      /**
-       * @description Controls access to the collection of vehicles owned by a user.
-       * @path /users/{userId}/vehicles/{vehicleId}
-       * @allow A signed-in user (auth.uid=`user123`) listing their own vehicles. (list)
-       * @allow A signed-in user (auth.uid=`user123`) creating a new vehicle under their own profile. (create)
-       * @deny A signed-in user (auth.uid=`user456`) trying to read a vehicle owned by `user123`. (get)
-       * @principle Enforces strict data ownership for a user's subcollections based on path.
-       */
-      match /vehicles/{vehicleId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidVehicleData(userId, vehicleId);
-        allow update: if isExistingOwner(userId) && isVehicleDataImmutable();
-        allow delete: if isExistingOwner(userId);
+    /**
+     * @description Manages fuel log entries for a specific vehicle.
+     * @path /users/{userId}/vehicles/{vehicleId}/fuelLogs/{fuelLogId}
+     * @allow (list) A user with auth.uid 'user123' lists all fuel logs for their vehicle at /users/user123/vehicles/car456.
+     * @deny (create) A user with auth.uid 'userABC' tries to add a fuel log to another user's vehicle.
+     * @principle Inherits ownership from the parent user path, securing all nested fuel log data.
+     */
+    match /users/{userId}/vehicles/{vehicleId}/fuelLogs/{fuelLogId} {
+      // Reads: Only the owner of the parent vehicle can read fuel logs.
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
 
-        /**
-         * @description Controls access to fuel logs for a specific vehicle.
-         * @path /users/{userId}/vehicles/{vehicleId}/fuelLogs/{fuelLogId}
-         * @allow A signed-in user (auth.uid=`user123`) reading a fuel log for one of their vehicles. (get)
-         * @allow A signed-in user (auth.uid=`user123`) creating a fuel log for one of their vehicles. (create)
-         * @deny An anonymous user trying to list fuel logs. (list)
-         * @deny A signed-in user (auth.uid=`user456`) trying to delete a fuel log for a vehicle owned by `user123`. (delete)
-         * @principle Inherits ownership from the parent path, ensuring only the vehicle owner can manage logs.
-         */
-        match /fuelLogs/{fuelLogId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isOwner(userId) && hasValidFuelLogData(vehicleId, fuelLogId);
-          allow update: if isExistingOwner(userId) && isFuelLogDataImmutable();
-          allow delete: if isExistingOwner(userId);
-        }
+      // Writes: Only the owner can manage fuel logs for their vehicle.
+      allow create: if isOwner(userId) && isValidFuelLogCreate(vehicleId);
+      allow update: if isExistingOwner(userId) && isImmutableFuelLog();
+      allow delete: if isExistingOwner(userId);
+    }
+    
+    /**
+     * @description Manages maintenance alerts for a specific vehicle.
+     * @path /users/{userId}/vehicles/{vehicleId}/maintenanceAlerts/{maintenanceAlertId}
+     * @allow (delete) A user with auth.uid 'user123' deletes an alert from /users/user123/vehicles/car456/maintenanceAlerts/alert789.
+     * @deny (get) A guest or another user tries to read a maintenance alert they do not own.
+     * @principle Inherits ownership from the parent user path, securing all nested maintenance data.
+     */
+    match /users/{userId}/vehicles/{vehicleId}/maintenanceAlerts/{maintenanceAlertId} {
+      // Reads: Only the owner of the parent vehicle can read maintenance alerts.
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
 
-        /**
-         * @description Controls access to maintenance alerts for a specific vehicle.
-         * @path /users/{userId}/vehicles/{vehicleId}/maintenanceAlerts/{maintenanceAlertId}
-         * @allow A signed-in user (auth.uid=`user123`) listing maintenance alerts for their vehicle. (list)
-         * @allow A signed-in user (auth.uid=`user123`) creating a new maintenance alert for their vehicle. (create)
-         * @deny A signed-in user (auth.uid=`user456`) reading an alert for another user's vehicle. (get)
-         * @principle Inherits ownership from the parent path, ensuring only the vehicle owner can manage alerts.
-         */
-        match /maintenanceAlerts/{maintenanceAlertId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isOwner(userId) && hasValidMaintenanceAlertData(vehicleId, maintenanceAlertId);
-          allow update: if isExistingOwner(userId) && isMaintenanceAlertDataImmutable();
-          allow delete: if isExistingOwner(userId);
-        }
-      }
+      // Writes: Only the owner can manage maintenance alerts for their vehicle.
+      allow create: if isOwner(userId) && isValidMaintenanceAlertCreate(vehicleId);
+      allow update: if isExistingOwner(userId) && isImmutableMaintenanceAlert();
+      allow delete: if isExistingOwner(userId);
     }
   }
 }
