@@ -101,7 +101,7 @@ function MobileSidebar() {
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { openMobile, setOpenMobile, toggleSidebar, setOpen } = useSidebar();
+  const { openMobile, setOpenMobile, setOpen } = useSidebar();
   const isMobile = useIsMobile();
 
   React.useEffect(() => {
@@ -172,7 +172,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       </Sheet>
       <SidebarInset>
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
-          <SidebarTrigger className="flex md:hidden" onClick={toggleSidebar} />
+          <SidebarTrigger className="flex md:hidden" />
           <div className="flex w-full items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
                <Select defaultValue="main-vehicle">
@@ -218,5 +218,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   )
 }
-
-    
