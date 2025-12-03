@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { updateProfile } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -40,7 +41,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { useUser } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const profileFormSchema = z.object({
@@ -55,6 +56,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 export default function ProfilePage() {
   const { toast } = useToast();
   const { user, isLoading: isUserLoading } = useUser();
+  const auth = useAuth();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -73,11 +75,41 @@ export default function ProfilePage() {
     }
   }, [user, form]);
 
-  function onSubmit(data: ProfileFormValues) {
-    toast({
-      title: 'Perfil atualizado!',
-      description: 'Suas informações foram salvas com sucesso.',
-    });
+  async function onSubmit(data: ProfileFormValues) {
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Você precisa estar logado para atualizar o perfil."
+        });
+        return;
+    }
+
+    try {
+        await updateProfile(user, {
+            displayName: data.name
+        });
+
+        if (data.phone && data.phone !== user.phoneNumber) {
+             toast({
+                title: 'Nome atualizado!',
+                description: 'A atualização do telefone requer verificação e não é suportada nesta interface.',
+            });
+        } else {
+             toast({
+                title: 'Perfil atualizado!',
+                description: 'Suas informações foram salvas com sucesso.',
+            });
+        }
+
+    } catch (error) {
+        console.error("Erro ao atualizar o perfil:", error);
+        toast({
+            variant: "destructive",
+            title: "Erro ao atualizar",
+            description: "Não foi possível salvar suas informações. Tente novamente.",
+        });
+    }
   }
 
   function handleDownloadData() {
