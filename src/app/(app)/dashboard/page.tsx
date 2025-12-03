@@ -138,8 +138,6 @@ export default function DashboardPage() {
 }, [fuelLogs, primaryVehicle]);
 
 
-  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
-
   const finalSummaryData = useMemo(() => [
     { icon: <Gauge className="text-primary" />, ...summaryData[0] },
     { icon: <Wallet className="text-primary" />, ...summaryData[1] },
@@ -195,8 +193,8 @@ export default function DashboardPage() {
               >
                 <div className="flex items-center gap-4">
                   <Avatar className="hidden h-9 w-9 sm:flex">
-                    <AvatarImage src={userAvatar?.imageUrl} alt="Avatar" data-ai-hint={userAvatar?.imageHint} />
-                    <AvatarFallback>{primaryVehicle?.name?.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={user?.photoURL ?? undefined} alt="Avatar do usuário" />
+                    <AvatarFallback>{user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="grid gap-1">
                     <p className="text-sm font-medium leading-none">
