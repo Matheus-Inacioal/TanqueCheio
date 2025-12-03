@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Auth, onAuthStateChanged, User } from 'firebase/auth';
-import { useAuth } from '@/firebase/provider'; // Assuming useAuth is exported from provider
+import { useAuth } from '@/firebase'; 
 
 /**
  * Interface for the return value of the useUser hook.

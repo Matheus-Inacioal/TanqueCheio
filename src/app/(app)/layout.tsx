@@ -104,7 +104,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { openMobile, setOpenMobile, setOpen } = useSidebar();
   const isMobile = useIsMobile();
-  const { user, isUserLoading } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
 
   React.useEffect(() => {
