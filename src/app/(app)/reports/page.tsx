@@ -42,6 +42,7 @@ export default function ReportsPage() {
     );
   }, [user, firestore, primaryVehicle]);
   const { data: fuelLogs, isLoading: areFuelLogsLoading } = useCollection<FillUp>(fuelLogsQuery);
+  const isLoading = areVehiclesLoading || areFuelLogsLoading;
 
   const handlePreviousMonth = () => {
     setCurrentDate(subMonths(currentDate, 1));
@@ -56,9 +57,7 @@ export default function ReportsPage() {
     return month.charAt(0).toUpperCase() + month.slice(1);
   }, [currentDate]);
 
-  const { monthlyCostData, monthlyConsumptionData, allTimeConsumptionData, allTimeCostData, noData } = useReportsData(fuelLogs, currentDate);
-  
-  const isLoading = areVehiclesLoading || areFuelLogsLoading;
+  const { monthlyCostData, monthlyConsumptionData, allTimeConsumptionData, allTimeCostData, noData } = useReportsData(fuelLogs, currentDate, isLoading);
   
   return (
     <div className="flex flex-col gap-6">

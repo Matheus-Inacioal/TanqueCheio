@@ -20,8 +20,6 @@ import { collection, query, orderBy, limit } from "firebase/firestore";
 import type { FillUp, Vehicle } from "@/lib/types";
 import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useDashboardData } from "@/lib/data-service";
 
 
@@ -48,12 +46,11 @@ export default function DashboardPage() {
   }, [user, firestore, primaryVehicle]);
 
   const { data: fuelLogs, isLoading: areFuelLogsLoading } = useCollection<FillUp>(fuelLogsQuery);
+  const isLoading = areVehiclesLoading || areFuelLogsLoading;
 
-  const { summaryData, recentActivities, costData, consumptionData } = useDashboardData(fuelLogs, primaryVehicle);
+  const { summaryData, recentActivities, costData, consumptionData, noData } = useDashboardData(fuelLogs, primaryVehicle, isLoading);
 
   const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
-
-  const isLoading = areVehiclesLoading || areFuelLogsLoading;
 
   const finalSummaryData = useMemo(() => [
     { icon: <Gauge className="text-primary" />, ...summaryData[0] },

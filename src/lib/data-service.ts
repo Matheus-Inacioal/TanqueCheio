@@ -5,26 +5,27 @@ import { ptBR } from 'date-fns/locale';
 import type { FillUp, Vehicle } from './types';
 
 const processData = (fuelLogs: FillUp[] | null, primaryVehicle: Vehicle | undefined) => {
-    const emptyCostData = Array.from({ length: 6 }).map((_, i) => {
-        const d = subMonths(new Date(), i);
-        const monthName = format(d, 'MMM', { locale: ptBR });
-        return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
-    }).reverse();
-
-    const emptyState = {
-        summaryData: [
-            { title: "Consumo Médio", value: "0.0", unit: "km/L" },
-            { title: "Gasto Mensal", value: "R$ 0,00" },
-            { title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
-            { title: "Distância Mensal", value: "0 km" },
-        ],
-        recentActivities: [],
-        costData: emptyCostData,
-        consumptionData: [],
-    };
     
+    // Guarda de segurança para retornar um estado vazio se não houver abastecimentos
     if (!fuelLogs || fuelLogs.length === 0) {
-        return emptyState;
+        const emptyCostData = Array.from({ length: 6 }).map((_, i) => {
+            const d = subMonths(new Date(), i);
+            const monthName = format(d, 'MMM', { locale: ptBR });
+            return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
+        }).reverse();
+
+        return {
+            summaryData: [
+                { title: "Consumo Médio", value: "0.0", unit: "km/L" },
+                { title: "Gasto Mensal", value: "R$ 0,00" },
+                { title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
+                { title: "Distância Mensal", value: "0 km" },
+            ],
+            recentActivities: [],
+            costData: emptyCostData,
+            consumptionData: [],
+            noData: true,
+        };
     }
 
     const vehicleName = primaryVehicle?.name || 'Veículo';
@@ -91,17 +92,33 @@ const processData = (fuelLogs: FillUp[] | null, primaryVehicle: Vehicle | undefi
         }
     }).filter(Boolean);
 
-    return { summaryData, recentActivities, costData, consumptionData };
+    return { summaryData, recentActivities, costData, consumptionData, noData: false };
 };
 
 
-export const useDashboardData = (fuelLogs: FillUp[] | null, primaryVehicle: Vehicle | undefined) => {
-    return useMemo(() => processData(fuelLogs, primaryVehicle), [fuelLogs, primaryVehicle]);
-};
-
-export const useReportsData = (fuelLogs: FillUp[] | null, currentDate: Date) => {
+export const useDashboardData = (fuelLogs: FillUp[] | null, primaryVehicle: Vehicle | undefined, isLoading: boolean) => {
     return useMemo(() => {
-        if (!fuelLogs || fuelLogs.length === 0) {
+        if (isLoading) {
+             const emptyCostData = Array.from({ length: 6 }).map((_, i) => {
+                const d = subMonths(new Date(), i);
+                const monthName = format(d, 'MMM', { locale: ptBR });
+                return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), cost: 0 };
+            }).reverse();
+            return {
+                summaryData: Array(4).fill({}),
+                recentActivities: [],
+                costData: emptyCostData,
+                consumptionData: [],
+                noData: true,
+            };
+        }
+        return processData(fuelLogs, primaryVehicle);
+    }, [fuelLogs, primaryVehicle, isLoading]);
+};
+
+export const useReportsData = (fuelLogs: FillUp[] | null, currentDate: Date, isLoading: boolean) => {
+    return useMemo(() => {
+        if (isLoading || !fuelLogs || fuelLogs.length === 0) {
             return {
                 monthlyCostData: [],
                 monthlyConsumptionData: [],
@@ -127,6 +144,7 @@ export const useReportsData = (fuelLogs: FillUp[] | null, currentDate: Date) => 
         const monthlyConsumptionData = monthlyLogs.slice().sort((a,b) => a.odometer - b.odometer).map((log, index, arr) => {
             if (index === 0) return null;
             const prevLog = arr[index - 1];
+            if (!prevLog) return null;
             const distance = log.odometer - prevLog.odometer;
             const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
             return {
@@ -138,6 +156,7 @@ export const useReportsData = (fuelLogs: FillUp[] | null, currentDate: Date) => 
         const allTimeConsumptionData = fuelLogs.slice().sort((a,b) => a.odometer - b.odometer).slice(-10).map((log, index, arr) => {
             if (index === 0) return null;
             const prevLog = arr[index - 1];
+            if (!prevLog) return null;
             const distance = log.odometer - prevLog.odometer;
             const consumption = distance > 0 && log.liters > 0 ? distance / log.liters : 0;
             return {
@@ -163,5 +182,5 @@ export const useReportsData = (fuelLogs: FillUp[] | null, currentDate: Date) => 
             allTimeCostData,
             noData: monthlyLogs.length === 0,
         };
-      }, [fuelLogs, currentDate]);
+      }, [fuelLogs, currentDate, isLoading]);
 };
