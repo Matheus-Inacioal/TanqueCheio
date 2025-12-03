@@ -90,6 +90,9 @@ export default function ProfilePage() {
             displayName: data.name
         });
 
+        // Firebase Auth requires a verification process to update phone number,
+        // which is outside the scope of a simple profile update.
+        // We will just show a toast message.
         if (data.phone && data.phone !== user.phoneNumber) {
              toast({
                 title: 'Nome atualizado!',
@@ -249,6 +252,9 @@ export default function ProfilePage() {
                   )}
                 />
               </CardContent>
+              <CardFooter className="border-t px-6 py-4">
+                <Button type="submit">Salvar alterações</Button>
+              </CardFooter>
           </Card>
 
           {/* Preferências */}
@@ -311,9 +317,6 @@ export default function ProfilePage() {
                       Enviaremos um link seguro para o seu e-mail para que você possa criar uma nova senha.
                   </FormDescription>
               </CardContent>
-              <CardFooter className="border-t px-6 py-4">
-                <Button type="submit">Salvar alterações</Button>
-              </CardFooter>
           </Card>
 
           <Card>
@@ -350,3 +353,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
