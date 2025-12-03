@@ -36,12 +36,12 @@ import { ptBR } from "date-fns/locale";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
 
 const addFillUpSchema = z.object({
-  vehicleId: z.string({ required_error: "Selecione um veículo." }),
+  vehicleId: z.string({ required_error: "Selecione um veículo." }).min(1, "Selecione um veículo."),
   date: z.date({ required_error: "Selecione uma data." }),
   odometer: z.coerce.number().min(1, "O odômetro deve ser maior que zero."),
   liters: z.coerce.number().min(0.1, "A quantidade de litros deve ser maior que zero."),
   totalCost: z.coerce.number().min(0.1, "O custo total deve ser maior que zero."),
-  fuelType: z.enum(["Gasoline", "Ethanol", "Diesel"]),
+  fuelType: z.enum(["Gasoline", "Ethanol", "Diesel"], { required_error: "Selecione o tipo de combustível."}),
 });
 
 type AddFillUpFormValues = z.infer<typeof addFillUpSchema>;
@@ -62,18 +62,35 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
   const form = useForm<AddFillUpFormValues>({
     resolver: zodResolver(addFillUpSchema),
     defaultValues: {
+      vehicleId: "",
       date: new Date(),
+      odometer: 0,
+      liters: 0,
+      totalCost: 0,
+      fuelType: undefined,
     }
   });
 
   React.useEffect(() => {
-    if (vehicles && vehicles.length > 0) {
-      const primaryVehicle = vehicles.find(v => v.isPrimary);
-      if (primaryVehicle) {
-        form.setValue("vehicleId", primaryVehicle.id);
-      }
+    if (open && vehicles && vehicles.length > 0) {
+        const primaryVehicle = vehicles.find(v => v.isPrimary);
+        if (primaryVehicle) {
+            form.setValue("vehicleId", primaryVehicle.id);
+        } else if (vehicles.length > 0) {
+            form.setValue("vehicleId", vehicles[0].id);
+        }
     }
-  }, [vehicles, form]);
+    if (!open) {
+        form.reset({
+            vehicleId: "",
+            date: new Date(),
+            odometer: 0,
+            liters: 0,
+            totalCost: 0,
+            fuelType: undefined,
+        });
+    }
+  }, [vehicles, open, form]);
 
   const handleSubmit = async (values: AddFillUpFormValues) => {
     if (!user) return;
@@ -93,7 +110,6 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
             title: "Sucesso!",
             description: "Abastecimento salvo com sucesso.",
         });
-        form.reset();
         setOpen(false);
     } catch (error) {
         console.error("Erro ao salvar abastecimento:", error);
@@ -123,7 +139,7 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Veículo</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um veículo" />
@@ -197,7 +213,7 @@ export function AddFillUpDialog({ children }: { children: React.ReactNode }) {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Combustível</FormLabel>
-                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                             <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Selecione o tipo de combustível" />
