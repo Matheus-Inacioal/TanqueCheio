@@ -1,7 +1,9 @@
-patch-package
+diff --git a/node_modules/firebase/auth/dist/esm/index.esm.js b/node_modules/firebase/auth/dist/esm/index.esm.js
+index 5c3081e..e223c6c 100644
 --- a/node_modules/firebase/auth/dist/esm/index.esm.js
 +++ b/node_modules/firebase/auth/dist/esm/index.esm.js
-@@ -1,2 +1,2 @@
+@@ -1,4 +1,4 @@
 -export * from '@firebase/auth/dist/esm5/index.esm.js';
 +export * from '../../auth/dist/esm5/index.esm.js';
  //# sourceMappingURL=index.esm.js.map
+ 
