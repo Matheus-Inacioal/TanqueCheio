@@ -5,7 +5,7 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -63,12 +63,12 @@ export default function SignupPage() {
     }
   }, [user, isLoading, router]);
   
-  const createFirestoreUser = async (user: any) => {
+  const createFirestoreUser = async (user: any, displayName?: string | null) => {
     const userRef = doc(firestore, 'users', user.uid);
     await setDoc(userRef, {
       id: user.uid,
       email: user.email,
-      displayName: user.displayName,
+      displayName: displayName || user.displayName,
     });
   }
 
@@ -76,7 +76,7 @@ export default function SignupPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       await updateProfile(userCredential.user, { displayName: values.name });
-      await createFirestoreUser(userCredential.user);
+      await createFirestoreUser(userCredential.user, values.name);
       
       toast({
         title: 'Conta criada com sucesso!',
@@ -100,19 +100,13 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      await createFirestoreUser(result.user);
-      toast({
-        title: 'Login com Google bem-sucedido!',
-        description: 'Você será redirecionado para o dashboard.',
-      });
-      router.push('/dashboard');
+      await signInWithRedirect(auth, provider);
     } catch (error) {
-      console.error('Erro de login com Google:', error);
+      console.error('Erro ao iniciar cadastro com Google:', error);
       toast({
         variant: 'destructive',
-        title: 'Falha no Login com Google',
-        description: 'Não foi possível fazer login com o Google. Tente novamente.',
+        title: 'Falha no Cadastro com Google',
+        description: 'Não foi possível iniciar o processo de cadastro com o Google.',
       });
     }
   };
@@ -213,5 +207,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
-    

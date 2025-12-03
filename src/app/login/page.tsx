@@ -5,10 +5,9 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -43,7 +42,6 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 export default function LoginPage() {
   const { toast } = useToast();
   const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const { user, isLoading } = useUser();
 
@@ -83,34 +81,17 @@ export default function LoginPage() {
     }
   };
 
-  const createFirestoreUser = async (user: any) => {
-    const userRef = doc(firestore, 'users', user.uid);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) {
-        await setDoc(userRef, {
-            id: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-        });
-    }
-  }
-
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      await createFirestoreUser(result.user);
-      toast({
-        title: 'Login com Google bem-sucedido!',
-        description: 'Você será redirecionado para o dashboard.',
-      });
-      router.push('/dashboard');
+      // Usando signInWithRedirect em vez de signInWithPopup
+      await signInWithRedirect(auth, provider);
     } catch (error) {
-      console.error('Erro de login com Google:', error);
+      console.error('Erro ao iniciar login com Google:', error);
       toast({
         variant: 'destructive',
         title: 'Falha no Login com Google',
-        description: 'Não foi possível fazer login com o Google. Tente novamente.',
+        description: 'Não foi possível iniciar o processo de login com o Google.',
       });
     }
   };
