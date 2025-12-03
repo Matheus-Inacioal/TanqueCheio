@@ -48,7 +48,7 @@ export default function DashboardPage() {
 
   const { summaryData, recentActivities, costData, consumptionData } = useMemo(() => {
     const emptySummary = [
-      { icon: <Gauge className="text-primary" />, title: "Consumo Médio", value: "0", unit: "km/L" },
+      { icon: <Gauge className="text-primary" />, title: "Consumo Médio", value: "0.0", unit: "km/L" },
       { icon: <Wallet className="text-primary" />, title: "Gasto Mensal", value: "R$ 0,00" },
       { icon: <Droplets className="text-primary" />, title: "Último Abastecimento", value: "0 L", subValue: "R$ 0,00" },
       { icon: <Car className="text-primary" />, title: "Distância Mensal", value: "0 km" },
@@ -215,3 +215,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
