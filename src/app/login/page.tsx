@@ -63,7 +63,7 @@ export default function LoginPage() {
         title: 'Login realizado com sucesso!',
         description: 'Redirecionando...',
       });
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       console.error(error);
       let description = 'Ocorreu um erro ao fazer login.';
@@ -86,7 +86,7 @@ export default function LoginPage() {
         title: 'Login com Google realizado com sucesso!',
         description: 'Redirecionando...',
       });
-      router.push('/');
+      router.push('/dashboard');
     } catch (error) {
       console.error(error);
       toast({

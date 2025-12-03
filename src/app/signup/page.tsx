@@ -69,7 +69,7 @@ export default function SignupPage() {
         title: 'Conta criada com sucesso!',
         description: 'Você será redirecionado.',
       });
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       console.error(error);
       let description = "Ocorreu um erro ao criar a conta.";
