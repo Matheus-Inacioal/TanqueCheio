@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,7 +19,6 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
   Form,
   FormControl,
@@ -41,6 +40,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useUser } from '@/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -53,18 +54,24 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function ProfilePage() {
   const { toast } = useToast();
-  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
-
-  // Valores padrão para o formulário. Em um app real, viriam do seu backend.
-  const defaultValues: Partial<ProfileFormValues> = {
-    name: 'Usuário',
-    phone: '(99) 99999-9999',
-  };
+  const { user, isLoading: isUserLoading } = useUser();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    defaultValues: {
+      name: '',
+      phone: '',
+    },
   });
+
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        name: user.displayName || '',
+        phone: user.phoneNumber || '',
+      });
+    }
+  }, [user, form]);
 
   function onSubmit(data: ProfileFormValues) {
     toast({
@@ -93,7 +100,7 @@ export default function ProfilePage() {
     a.href = url;
     a.download = 'meus_dados_tanque_cheio.json';
     document.body.appendChild(a);
-a.click();
+    a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
@@ -101,6 +108,43 @@ a.click();
         title: "Download iniciado",
         description: "Seus dados estão sendo baixados em formato JSON."
     })
+  }
+
+  if (isUserLoading) {
+    return (
+        <div className="space-y-8">
+            <div>
+                <Skeleton className="h-8 w-72" />
+                <Skeleton className="h-4 w-96 mt-2" />
+            </div>
+             <Card>
+                <CardHeader>
+                  <CardTitle>Dados Pessoais</CardTitle>
+                  <CardDescription>
+                    Atualize suas informações. O e-mail não pode ser alterado.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-center gap-4">
+                        <Skeleton className="h-16 w-16 rounded-full" />
+                        <Skeleton className="h-10 w-28" />
+                    </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                     <div className="space-y-2">
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                     <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
   }
 
   return (
@@ -126,10 +170,10 @@ a.click();
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
                     <AvatarImage
-                      src={userAvatar?.imageUrl}
+                      src={user?.photoURL ?? undefined}
                       alt="Avatar do usuário"
                     />
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarFallback>{user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                   <Button variant="outline">Alterar foto</Button>
                 </div>
@@ -152,7 +196,7 @@ a.click();
                     <Input
                       readOnly
                       disabled
-                      value="usuario@exemplo.com"
+                      value={user?.email || ''}
                     />
                   </FormControl>
                   <FormDescription>
